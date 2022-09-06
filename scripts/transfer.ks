@@ -1,7 +1,6 @@
 {
-  local INFINITY is 2^64.
-
-  local transfer is lex(
+  local INF is 2^64.
+  local tf is lex(
     "exec", exec@,
     "freeze", freeze@,
     "seek_SOI", seek_SOI@,
@@ -9,191 +8,128 @@
   ).
 
   function exec {
-    parameter autowarp is 0,
-      n is nextnode,
-      v is n:burnvector,
-      starttime is time:seconds + n:eta - mnv_time(v:mag)/2.
+    parameter wrp is 0, n is nextnode, v is n:burnvector,
+      stT is time:seconds + n:eta - mnv_time(v:mag)/2.
     lock steering to n:burnvector.
-    if autowarp warpto(starttime - 30).
-    wait until time:seconds >= starttime.
+    if wrp warpto(stT - 30).
+    wait until time:seconds >= stT.
+    local st is 0.
     local t is 0.
     lock throttle to t.
-    local mnvStarted is false.
-    until vdot(n:burnvector, v) < 0 or (mnvStarted = true and t <= 0.01) {
-      set mnvStarted to true.
-      if ship:maxthrust < 0.1 {
-        stage.
-        wait 0.1.
-        if ship:maxthrust < 0.1 {
-          for part in ship:parts {
-            for resource in part:resources set resource:enabled to true.
-          }
-          wait 0.1.
-        }
+    until vdot(n:burnvector, v) < 0 or (st and t <= 0.002) {
+      set st to 1. if ship:maxthrust < 0.1 {
+        stage. wait 0.1.
+        if ship:maxthrust < 0.1 { for part in ship:parts { for r in part:resources set r:enabled to true. } wait 0.1. }
       }
-      set t to min(mnv_time(n:burnvector:mag), 1).
-      wait 0.1.
+      set t to min(mnv_time(n:burnvector:mag), 1). wait 0.1.
     }
-    lock throttle to 0.
-    unlock steering.
-    remove nextnode.
-    wait 0.
+    lock throttle to 0. unlock steering. remove nextnode. wait 0.
   }
 
-  function freeze {
-    parameter n. return lex("frozen", n).
-  }
+  function freeze { parameter n. return lex("fr", n). }
 
   function seek {
-    parameter t, r, n, p, fitness,
-      data is list(t, r, n, p),
-      fit is orbit_fitness(fitness@).
-    set data to optimize(data, fit, 100).
-    set data to optimize(data, fit, 10).
-    set data to optimize(data, fit, 1).
-    fit(data). wait 0. return data.
+    parameter t, r, n, p, fitFn, d is list(t, r, n, p), fit is orbFit(fitFn@).
+    set d to optmz(d, fit, 47).
+    set d to optmz(d, fit, 7).
+    set d to optmz(d, fit, 0.1).
+    set d to optmz(d, fit, 0.01).
+    fit(d). wait 0. return d.
   }
 
   function seek_SOI {
-    parameter target_body, target_periapsis,
-            start_time is time:seconds + 600.
-    local data is seek(start_time, 0, 0, 500, {
-      parameter mnv.
-      if (mnv:orbit:eta:apoapsis > INFINITY) { return -INFINITY. }
-      if transfers_to(mnv:orbit, target_body) return 1.
-      return -closest_approach(
-              target_body,
-              time:seconds + mnv:eta,
-              time:seconds + mnv:eta + mnv:orbit:period
-      ).
+    parameter tBody, tPeri, t is time:seconds + 600, p is 500.
+    local d is seek(t, 0, 0, p, {
+      parameter mnv. if (mnv:orbit:eta:apoapsis > INF) { return -INF. }
+      if tfTo(mnv:orbit, tBody) return 1.
+      return -closestApp(tBody, time:seconds + mnv:eta, time:seconds + mnv:eta + mnv:orbit:period).
     }).
-    return seek(data[0], data[1], data[2], data[3], {
-      parameter mnv.
-      if not transfers_to(mnv:orbit, target_body) return -INFINITY.
-      return -abs(mnv:orbit:nextpatch:periapsis - target_periapsis).
+    return seek(d[0], d[1], d[2], d[3], {
+      parameter mnv. if not tfTo(mnv:orbit, tBody) return -INF.
+      return -abs(mnv:orbit:nextpatch:periapsis - tPeri).
     }).
   }
 
-  function transfers_to {
-    parameter target_orbit, target_body.
-    return (target_orbit:hasnextpatch and
-            target_orbit:nextpatch:body = target_body).
+  function tfTo {
+    parameter tOrb, tBody.
+    return (tOrb:hasnextpatch and tOrb:nextpatch:body = tBody).
   }
 
-  function closest_approach {
-    parameter target_body, start_time, end_time.
-    local start_slope is slope_at(target_body, start_time).
-    local end_slope is slope_at(target_body, end_time).
-    local middle_time is (start_time + end_time) / 2.
-    local middle_slope is slope_at(target_body, middle_time).
-    until (end_time - start_time < 0.1) or middle_slope < 0.1 {
-      if (middle_slope * start_slope) > 0
-        set start_time to middle_time.
-      else
-        set end_time to middle_time.
-      set middle_time to (start_time + end_time) / 2.
-      set middle_slope to slope_at(target_body, middle_time).
+  function closestApp {
+    parameter b, sT, eT.
+    local stSlope is slopeAt(b, sT).
+    local midT is (sT + eT) / 2.
+    local midS is slopeAt(b, midT).
+    until (eT - sT < 0.1) or midS < 0.1 {
+      if (midS * stSlope) > 0 set sT to midT. else set eT to midT.
+      set midT to (sT + eT) / 2.
+      set midS to slopeAt(b, midT).
     }
-    return separation_at(target_body, middle_time).
+    return sepAt(b, midT).
   }
 
-  function slope_at {
-    parameter target_body, at_time.
-    return (
-      separation_at(target_body, at_time + 1) -
-      separation_at(target_body, at_time - 1)
-    ) / 2.
+  function slopeAt {
+    parameter b, t.
+    return (sepAt(b, t + 1) - sepAt(b, t - 1)) / 2.
   }
 
-  function separation_at {
-    parameter target_body, at_time.
-    return (positionat(ship, at_time) - positionat(target_body, at_time)):mag.
+  function sepAt {
+    parameter b, t.
+    return (positionat(ship, t) - positionat(b, t)):mag.
   }
 
   function mnv_time {
-    // This function assumes there's enough fuel in the current stage to perform maneuver.
     parameter dV.
     local g is ship:orbit:body:mu/ship:obt:body:radius^2.
     local m is ship:mass * 1000.
     local e is constant():e.
-    local engine_count is 0.
-    local thrust is 0.
-    local isp is 0.
-    list engines in all_engines.
-    for en in all_engines if en:ignition and not en:flameout {
-      set thrust to thrust + en:availablethrust.
-      set isp to isp + en:isp.
-      set engine_count to engine_count + 1.
-//      print " thrust: " + thrust.
-//      print "    isp: " + isp.
-//      print "eng_cnt: " + engine_count.
-    }
-    set isp to isp / engine_count.
-    set thrust to thrust * 1000.
-//    print "   final isp: " + isp.
-//    print "final thrust: " + thrust.
-//    print "engine_count: " + engine_count.
-//    print "           g: " + g.
-//    print "           m: " + m.
-//    print "     g * isp: " + g * isp.
-//    print "          dV: " + dV.
-    return g * m * isp * (1 - e^(-dV/(g*isp))) / thrust.
+    local eCnt is 0. local t is 0. local isp is 0.
+    list engines in es.
+    for en in es { set t to t + en:possiblethrust. set isp to isp + en:visp. set eCnt to eCnt + 1. }
+    set isp to isp / eCnt. set t to t * 1000.
+    return g * m * isp * (1 - e^(-dV/(g*isp))) / t.
   }
 
-  function orbit_fitness {
-    parameter fitness.
+  function orbFit {
+    parameter fitFn.
     return {
-      parameter data.
+      parameter d.
       until not hasnode { remove nextnode. wait 0. }
-      local new_node is node(
-              unfreeze(data[0]), unfreeze(data[1]),
-                      unfreeze(data[2]), unfreeze(data[3])).
-      add new_node.
-      wait 0.
-      return fitness(new_node).
+      local new_node is node(unfr(d[0]), unfr(d[1]), unfr(d[2]), unfr(d[3])).
+      add new_node. wait 0.
+      return fitFn(new_node).
     }.
   }
 
-  function optimize {
-    parameter data, fitness, step_size,
-            winning is list(fitness(data), data),
-            improvement is best_neighbor(winning, fitness, step_size).
-    until improvement[0] <= winning[0] {
-      set winning to improvement.
-      set improvement to best_neighbor(winning, fitness, step_size).
+  function optmz {
+    parameter d, fitFn, sz, winning is list(fitFn(d), d), imp is best_neighbor(winning, fitFn, sz).
+    until imp[0] <= winning[0] {
+      set winning to imp.
+      set imp to best_neighbor(winning, fitFn, sz).
     }
     return winning[1].
   }
 
   function best_neighbor {
-    parameter best, fitness, step_size.
-    for neighbor in neighbors(best[1], step_size) {
-      local score is fitness(neighbor).
-      if score > best[0] set best to list(score, neighbor).
-    }
+    parameter best, fitFn, sz.
+    for n in neighbors(best[1], sz) { local sc is fitFn(n). if sc > best[0] set best to list(sc, n). }
     return best.
   }
 
   function neighbors {
-    parameter data, step_size, results is list().
-    for i in range(0, data:length) if not frozen(data[i]) {
-      local increment is data:copy.
-      local decrement is data:copy.
-      set increment[i] to increment[i] + step_size.
-      set decrement[i] to decrement[i] - step_size.
-      results:add(increment).
-      results:add(decrement).
+    parameter d, sz, rs is list().
+    for i in range(0, d:length) if not fr(d[i]) {
+      local incr is d:copy. local decr is d:copy.
+      set incr[i] to incr[i] + sz.
+      set decr[i] to decr[i] - sz.
+      rs:add(incr). rs:add(decr).
     }
-    return results.
+    return rs.
   }
 
-  function frozen {
-    parameter v. return (v+""):indexof("frozen") <> -1.
-  }
+  // frozen/unfreeze
+  function fr { parameter v. return (v+""):indexof("fr") <> -1. }
+  function unfr { parameter v. if fr(v) return v["fr"]. else return v. }
 
-  function unfreeze {
-    parameter v. if frozen(v) return v["frozen"]. else return v.
-  }
-
-  export(transfer).
+  export(tf).
 }

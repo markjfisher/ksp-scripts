@@ -13,6 +13,7 @@
   local freeze is transfer["freeze"].
 
   // TODO: add autoFairing
+  // TODO: Abort should trickle up
 
   local launch is lex(
     "exec", exec@
@@ -47,7 +48,7 @@
   local desiredApoapsis is 0.
   local shouldCirc is true.
   local verbose is true.
-  local flightAt is 0.
+  local flightAt is false.
 
   function exec {
       parameter inc,
@@ -69,18 +70,17 @@
     if not aborted { set oldThrust to availablethrust. pitchManuever(). }
     if not aborted { gravityTurn(). }
     if not aborted { meco(). if circ circularize(). }
+    return aborted.
   }
 
   function setAbortTrigger {
     on abort {
       if not aborted {
         lock throttle to 0. abort on.
-        if verbose {
-          print " ".
-          print "Abort triggered manually.".
-        }
+        if verbose { print " ". print "Abort triggered manually". }
         set aborted to true.
       }
+      return aborted. // doesn't work when coming out of "on"
     }
   }
 
@@ -92,27 +92,24 @@
       print "3". voice:play(voiceTickNote). wait 0.5.
     }
     lock steering to up + r(0, 0, 180).
-    if verbose {
-      print "locking attitude control.".
-      wait 0.5.
-    }
+    if verbose { print "locking attitude control". wait 0.5. }
 
     if verbose { print "2". voice:play(voiceTickNote). wait 0.5. }
     lock throttle to 1. wait 0.5.
     if verbose {
-      print "throttle to full.".
+      print "throttle to full".
       print "1". voice:play(voiceTickNote).
       print "ignition".
     }
     stage.
 
     if (ship:availablethrust() < 1.15 * mass * constant:g0) {
-      print " ". print "subnominal thrust detected.".
-      print "attempting shutdown.".
+      print " ". print "subnominal thrust detected".
+      print "attempting shutdown".
       lock throttle to 0.
     } else {
       wait 1. stage.
-      if verbose { print "launch!". voice:play(voicetakeoffnote). wait 0.1. }
+      if verbose { print "launch". voice:play(voicetakeoffnote). wait 0.1. }
     }
 
     wait 2.
@@ -125,7 +122,7 @@
       if abs(vpitch - myPitch()) > 10 and not aborted { autoAbort(). break. }
       wait 0.1.
     }
-    if verbose { print " ". print "starting pitching maneuver.". }
+    if verbose { print " ". print "starting pitching maneuver". }
     set initialHeading to myHeading().
     set initialRoll to myRoll().
     lock steering to heading(initialHeading, myPitch())+ r(0, 0, initialRoll).
@@ -164,9 +161,22 @@
       if (altitude > desiredApoapsis * 1000 - 2000) set waitPeriod to 0.05.
       if desiredInclination < 80 or desiredInclination > 100 {
         if (altitude < lockAlt) and not aborted {
-          if abs(vPitch - myPitch()) > 10 or abs(vHeading - myHeading()) > 10 { autoAbort(). break. }
+          if abs(vPitch - myPitch()) > 10 or abs(vHeading - myHeading()) > 10 { 
+            print "pitch / heading out".
+            print "     vPitch: " + vPitch.
+            print "  myPitch(): " + myPitch().
+            print "   vHeading: " + vHeading.
+            print "myHeading(): " + myHeading().
+            print "       abs1: " + abs(vPitch - myPitch()).
+            print "       abs2: " + abs(vHeading - myHeading()).
+            autoAbort(). break.
+          }
         } else {
-          if vAng(facing:forevector, prograde:forevector) > 10 and not aborted {
+          if vAng(facing:forevector, prograde:forevector) > 15 and not aborted {
+            print "forevectors out".
+            print "    facing:forevector: " + facing:forevector.
+            print "  prograde:forevector: " + prograde:forevector.
+            print "                 vang: " + vAng(facing:forevector, prograde:forevector).
             autoAbort(). break.
           }
         }
@@ -176,20 +186,21 @@
   }
 
   function autoAbort {
+    voice:play(voiceTickNote).
     lock throttle to 0.
     if altitude < tLimitAlt { abort on. }
-    if verbose { print " ". print "Attitude control loss detected, aborting.". }
+    print " ". print "Attitude control loss detected, aborting".
     set aborted to true.
   }
 
   function autoDeploy {
-    ag10 on. lights on.
-    if verbose { print " ". print "Extending deployable equipment.". }
+    ag10 on. // lights on.
+    if verbose { print " ". print "Extending deployable equipment". }
     set deployed to true.
   }
 
   function lockToPrograde {
-    if verbose { print "locking to prograde.". }
+    if verbose { print "locking to prograde". }
     lock steering to prograde + r(0, 0, myRoll()).
     set proLocked to true.
   }
@@ -213,6 +224,7 @@
       if thrustLimited { set upperLimited to true. }
       set thrustLimited to true.
     } else {
+      print "limit thrust is staging. we have no available thrust available".
       stage.
       wait 0.1.
     }
@@ -220,7 +232,7 @@
 
   function meco {
     lock THROTTLE to 0.
-    if verbose { print " ". print "engine cut-off.". }
+    if verbose { print " ". print "engine cut-off". }
     wait until altitude > lockAlt.
     if not proLocked { lockToPrograde(). }
     set warp to 6. // still in atmosphere, so will cap at 4 probably
