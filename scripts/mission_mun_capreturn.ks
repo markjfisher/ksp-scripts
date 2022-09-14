@@ -1,28 +1,25 @@
-local transfer is import("transfer").
-local mission is import("mission").
+local tr is import("lib/transfer").
+local mission is import("lib/mission").
 local launch is improot("launch").
 
-local TARGET_ALTITUDE is 83000.
-local TARGET_MUNAR_ALTITUDE is 300000.
-local TARGET_RETURN_ALTITUDE is 35000.
-local REENTRY_BURN_ALTITUDE is 100000.
-local freeze is transfer["freeze"].
+local TGT_ALT is 83000.
+local TGT_MUNALT is 300000.
+local TGT_RETALT is 35000.
+local RENT_BURNALT is 100000.
+local fr is tr:freeze.
 local warping is false.
 local aborted is false.
 local havePrintedAbortMessage is false.
 
-local mun_cr_mission is mission({ parameter seq, ev, next.
+local m is mission({ parameter seq, ev, next.
   seq:add({
-    if not aborted { set aborted to launch["exec"](0, TARGET_ALTITUDE / 1000, true). }
-    if not aborted { wait 1. stage. wait 1. next(). } else {
-      if not havePrintedAbortMessage { print "aborted launch. press ctrl-c to get console back". set havePrintedAbortMessage to true. }
-    }
-    wait 5.
+    launch:exec(0, TGT_ALT / 1000, true).
+    wait 1. stage. wait 1. next().
   }).
 
   seq:add({
-    transfer["seek_SOI"](Mun, TARGET_MUNAR_ALTITUDE, time:seconds + 360, 860).
-    transfer["exec"](true).
+    tr:seek_SOI(Mun, TGT_MUNALT, time:seconds + 360, 860).
+    tr:exec(true).
     next().
   }).
 
@@ -33,28 +30,27 @@ local mun_cr_mission is mission({ parameter seq, ev, next.
 
   seq:add({
     if body = Mun {
-      wait 20. transfer["seek"](
-        freeze(time:seconds + 120), freeze(0), freeze(0), 0,
-        { parameter mnv. return -abs(mnv:orbit:periapsis - TARGET_MUNAR_ALTITUDE). }).
-      transfer["exec"](true).
+      wait 20. tr:seek(
+        fr(time:seconds + 120), fr(0), fr(0), 0,
+        { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_MUNALT). }).
+      tr:exec(true).
       next().
     }
     wait 0.1.
   }).
 
   seq:add({
-    transfer["seek"](
-      freeze(time:seconds + eta:periapsis), freeze(0), freeze(0), 0,
+    tr:seek(
+      fr(time:seconds + eta:periapsis), fr(0), fr(0), 0,
       { parameter mnv. return - abs(0.5 - mnv:orbit:eccentricity). }).
-    transfer["exec"](true).
+    tr:exec(true).
     next().
   }).
 
   seq:add({
-    wait 10.
-    local betweenTime is time:seconds + (eta:periapsis * 0.77). // roughly good exit
-    transfer["seek_SOI"](Kerbin, TARGET_RETURN_ALTITUDE, betweenTime, 300).
-    transfer["exec"](true).
+    wait 10. local betweenTime is time:seconds + (eta:periapsis * 0.77). // roughly good exit
+    tr:seek_SOI(Kerbin, TGT_RETALT, betweenTime, 300).
+    tr:exec(true).
     next().
   }).
 
@@ -67,33 +63,27 @@ local mun_cr_mission is mission({ parameter seq, ev, next.
 
   seq:add({
     if body = Kerbin {
-      wait 30. transfer["seek"](
-        freeze(time:seconds + 120), freeze(0), freeze(0), 0,
-        { parameter mnv. return -abs(mnv:orbit:periapsis - TARGET_RETURN_ALTITUDE). }).
-      transfer["exec"](true).
+      wait 30. tr:seek(
+        fr(time:seconds + 120), fr(0), fr(0), 0,
+        { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_RETALT). }).
+      tr:exec(true).
       next().
     }
   }).
 
   seq:add({
-    if ship:altitude < REENTRY_BURN_ALTITUDE * 10 {
-      set warp to 0. wait 1.
-      next().
+    if ship:altitude < RENT_BURNALT * 10 { set warp to 0. wait 1. next().
     } else {
-      if not warping { set warping to true. set warp to 5. }
-      wait 0.1.
+      if not warping { set warping to true. set warp to 5. } wait 0.1.
     }
   }).
 
   seq:add({
-    if ship:altitude < REENTRY_BURN_ALTITUDE {
+    if ship:altitude < RENT_BURNALT {
       ag10 off.
-      lock steering to retrograde.
-      lock throttle to 1.
+      lock steering to retrograde. lock throttle to 1.
       wait until ship:maxthrust < 1.
-      lock throttle to 0.
-      stage. wait 1.
-      lock steering to srfretrograde.
+      lock throttle to 0. stage. wait 1. lock steering to srfretrograde.
       next().
     }
   }).
@@ -102,4 +92,4 @@ local mun_cr_mission is mission({ parameter seq, ev, next.
 
 }).
 
-export(mun_cr_mission).
+export(m).

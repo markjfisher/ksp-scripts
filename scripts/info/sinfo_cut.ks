@@ -1,3 +1,4 @@
+// https://www.reddit.com/r/Kos/comments/p3at5s/kos_library_to_calculate_and_provide_extended/
 // Works, but is sooooooooooooo long. needs distilling down to just VdV or rewriting.
 @lazyglobal off.
 function stinfo {
@@ -271,11 +272,9 @@ function stinfo {
             actfdstart:ADD(e).
           }
         }
-
         if eg[e]:actfdsrc:LENGTH = 0 AND eg[e]:actfddest:LENGTH > 0 {
           actfdstart:ADD(e).
         }
-
       }
     }
 
@@ -405,12 +404,10 @@ function stinfo {
 
         if conW[e][LFidx] > 0 AND conW[e][OXidx] > 0 {
           local LFXcon to conW[e][LFidx] + conW[e][OXidx]*ox2lf.
-
           local LFXburn to choose 0 if LFXcon = 0 else cfma[e][LFidx]/LFXcon.
           local OXburn to burndu[e][OXidx].
           local LFburn to burndu[e][LFidx].
           if LFXburn < OXburn {
-
             set OXburn to LFXburn.
             set burndu[e][OXidx] to OXburn.
           }
@@ -422,17 +419,14 @@ function stinfo {
       }
 
       for e IN actfdstart {
-
         from {local f is 0.} until f > fuli:LENGTH-1 step {set f to f+1.} do {
           if burndu[e][f] > 0 AND burndu[e][f] < minburn { set minburn to burndu[e][f]. }
         }
       }
 
       from {local e is 0.} until e > eg:LENGTH-1 step {set e to e+1.} do {
-
         if cfma[e][SOidx] > 0 AND NOT(actfdstart:CONTAINS(e)) AND s <= eg[e]:egastage
           AND s > eg[e]:egdstage AND  conW[e][SOidx] > 0 {
-
           local burnV to cfma[e][SOidx] / conW[e][SOidx].
           if burnV < minburn { set minburn to burnV. }
         }
@@ -444,12 +438,10 @@ function stinfo {
       if minburn = 0 {
         set dostage to True.
       } else {
-
         local fuma to 0.
         local conS to 0.
         local thruVS to 0.
         local thruAS to 0.
-
         sub[s]:ADD(LEXICON("bt", minburn, "con", 0, "thruV", 0, "thruA", 0)).
 
         for e IN actfdstart {
@@ -457,7 +449,6 @@ function stinfo {
             if f <> SOidx AND burndu[e][f] > 0 {
               local fucon to 0.
               local fuconLF to 0.
-
               local bs to burnsrc[e][f].
 
               set fucon to conW[bs][f]*minburn.
@@ -474,7 +465,6 @@ function stinfo {
                   set cfma[bsLF][LFidx] to 0.
                 }
                 set fuma to fuma + fuconLF.
-
                 set bs to burnsrcLF[e][OXidx].
               }
               set cfma[bs][f] to cfma[bs][f] - fucon.
@@ -491,7 +481,6 @@ function stinfo {
         }
 
         from {local e is 0.} until e > eg:LENGTH-1 step {set e to e+1.} do {
-
           if cfma[e][SOidx] > 0 AND s <= eg[e]:egastage AND s > eg[e]:egdstage  {
             local fucon to conW[e][SOidx]*minburn.
             set conS to conS + conW[e][SOidx].
@@ -521,26 +510,20 @@ function stinfo {
       local hasdropeg to False.
       local fuleft to 0.
       from {local e is 0.} until e > eg:LENGTH-1 step {set e to e+1.} do {
-
         if s = eg[e]:egdstage+1 {
-
           set hasdropeg to True.
           set dropeg to dropeg+" "+e.
-
           local tfuel to 0.
 
           from {local f is 0.} until f > fuli:LENGTH-1 step {set f to f+1.} do {
             if conP[e][f] > 0 {
               set tfuel to tfuel + cfma[e][f].
-
               if f = OXidx AND conP[e][LFidx] = 0 { set tfuel to tfuel + cfma[e][LFidx]. }
             }
-
             set fuleft to fuleft + cfma[e][f].
           }
           if tfuel > 1e-7 {
             set nofuel to False.
-
           }
         }
       }
@@ -550,34 +533,26 @@ function stinfo {
         set stburn[s] to btstage.
         set stleft[s] to fuleft.
       } else {
-
         for e IN actfdend {
-
           setFDfma(e).
-
           setConThruFD(e,s).
         }
-        egCoFuLog(s).
       }
     }
   }
 
   function getREsrc {
     parameter e.
-
     local LFre to choose e if cfma[e][LFidx] > 0 else -1.
     local OXre to choose e if cfma[e][OXidx] > 0 else -1.
 
     for es IN eg[e]:actfdsrc {
-
       local rval to getREsrc(es).
       if rval[0] >= 0 AND cfma[rval[0]][LFidx] > fuMin {
         set LFre to rval[0].
-
       }
       if rval[1] >= 0 AND cfma[rval[1]][OXidx] > fuMin {
         set OXre to rval[1].
-
       }
     }
     return LIST(LFre,OXre).
@@ -592,7 +567,6 @@ function stinfo {
     for es IN eg[e]:actfdsrc {
       setFDfma(es).
       from {local f is 0.} until f > fuli:LENGTH-1 step {set f to f+1.} do {
-
         if f <> SOidx {
           set fdfma[e][f] to fdfma[e][f] + fdfma[es][f].
         }
@@ -602,14 +576,11 @@ function stinfo {
   }
 
   function setConThruFD {
-    parameter e,
-      s.
+    parameter e, s.
 
     from {local f is 0.} until f > fuli:LENGTH-1 step {set f to f+1.} do {
       set conP[e][f] to con[e][s][f].
-
       if fdfma[e][f] > 0 AND ( f <> OXidx OR fdfma[e][LFidx] > 0 ) {
-
         set conW[e][f] to con[e][s][f].
         set thruVW[e][f] to thruV[e][s][f].
         set thruAW[e][f] to thruA[e][s][f].
@@ -625,7 +596,7 @@ function stinfo {
       from {local f is 0.} until f > fuli:LENGTH-1 step {set f to f+1.} do {
         if fdfma[es][f] > 0 {
           if f = OXidx AND fdfma[es][LFidx] = 0 {
-
+            // need both, so don't set conW
           } else {
             set fdnum[e][f] to fdnum[e][f]+1.
           }
@@ -635,16 +606,13 @@ function stinfo {
 
     for ed IN eg[e]:actfddest {
       from {local f is 0.} until f > fuli:LENGTH-1 step {set f to f+1.} do {
-
         if f <> SOidx AND fdnum[ed][f] > 0 AND fdfma[e][f] > 0 {
           if f <> OXidx OR fdfma[e][LFidx] > 0 {
-
             set conW[e][f] to conW[e][f] + conW[ed][f] / fdnum[ed][f].
             set thruVW[e][f] to thruVW[e][f] + thruVW[ed][f] / fdnum[ed][f].
             set thruAW[e][f] to thruAW[e][f] + thruAW[ed][f] / fdnum[ed][f].
           }
         }
-
         set conP[e][f] to conP[e][f] + conP[ed][f].
       }
     }
@@ -658,7 +626,6 @@ function stinfo {
 
   local startmass IS 0.
   local endmass IS 0.
-
   local sinfo IS LEXICON().
 
   from {local s is 0.} until s > STAGE:NUMBER step {set s to s+1.} do {
@@ -742,6 +709,7 @@ function stinfo {
     set sinfolist[s] to sinfo:COPY.
   }
 
+  // Weird place to just exit
   return sinfolist.
 
   function eTree {
@@ -782,7 +750,6 @@ function stinfo {
         if egli:CONTAINS(pa) {
           set procfrom to pa.
         }
-
         if procfrom:DECOUPLEDIN < p:STAGE {
           procli:ADD(p:UID).
           egli:ADD(p).
@@ -817,11 +784,9 @@ function stinfo {
 
   function setConThru {
     parameter x, i.
-
     local conF to fuliZ:COPY.
     local thruVF to fuliZ:COPY.
     local thruAF to fuliZ:COPY.
-
     local pthrustvac IS x:POSSIBLETHRUSTAT(0).
     local pthrustcur IS x:POSSIBLETHRUST.
 

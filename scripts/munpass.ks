@@ -1,20 +1,18 @@
-// Mun Flyby mission script
-
-local transfer is import("transfer").
-local mission is import("mission").
+local tr is import("lib/transfer").
+local mission is import("lib/mission").
 local launch is improot("launch").
 
-local TARGET_ALTITUDE is 83000.
-local TARGET_MUNAR_ALTITUDE is 300000.
-local TARGET_RETURN_ALTITUDE is 35000.
-local REENTRY_BURN_ALTITUDE is 120000.
-local freeze is transfer["freeze"].
+local TGT_ALT is 83000.
+local TGT_MUNALT is 300000.
+local TGT_RET_ALT is 35000.
+local REENT_BURN_ALT is 120000.
+local fr is tr:freeze.
 local warping is false.
 
-local munflyby_mission is mission({ parameter seq, ev, next.
+local m is mission({ parameter seq, ev, next.
 
   seq:add({
-    launch["exec"](0, TARGET_ALTITUDE / 1000, false).
+    launch:exec(0, TGT_ALT / 1000, false).
     // need stage as mnv_time can't handle multi-stage
     wait 1. stage. wait 1.
     next().
@@ -22,8 +20,8 @@ local munflyby_mission is mission({ parameter seq, ev, next.
 
   // Head to Mun
   seq:add({
-    transfer["seek_SOI"](Mun, TARGET_MUNAR_ALTITUDE, time:seconds + 360, 860).
-    transfer["exec"](true).
+    tr:seek_SOI(Mun, TGT_MUNALT, time:seconds + 360, 860).
+    tr:exec(true).
     next().
   }).
 
@@ -37,20 +35,20 @@ local munflyby_mission is mission({ parameter seq, ev, next.
   seq:add({
     if body = Mun {
       wait 20.
-      transfer["seek"](
-        freeze(time:seconds + 120), freeze(0), freeze(0), 0,
-        { parameter mnv. return -abs(mnv:orbit:periapsis - TARGET_MUNAR_ALTITUDE). }).
-      transfer["exec"](true).
+      tr:seek(
+        fr(time:seconds + 120), fr(0), fr(0), 0,
+        { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_MUNALT). }).
+      tr:exec(true).
       next().
     }
     wait 0.1.
   }).
 
   seq:add({
-    transfer["seek"](
-      freeze(time:seconds + eta:periapsis), freeze(0), freeze(0), 0,
+    tr:seek(
+      fr(time:seconds + eta:periapsis), fr(0), fr(0), 0,
       { parameter mnv. return - abs(0.5 - mnv:orbit:eccentricity). }).
-    transfer["exec"](true).
+    tr:exec(true).
     next().
   }).
 
@@ -59,8 +57,8 @@ local munflyby_mission is mission({ parameter seq, ev, next.
     wait 10.
     // not working when orbit is wrong way around
     local betweenTime is time:seconds + (eta:periapsis * 0.75). // 3/4 of orbit
-    transfer["seek_SOI"](Kerbin, TARGET_RETURN_ALTITUDE, betweenTime, 300).
-    transfer["exec"](true).
+    tr:seek_SOI(Kerbin, TGT_RET_ALT, betweenTime, 300).
+    tr:exec(true).
     next().
   }).
 
@@ -74,16 +72,16 @@ local munflyby_mission is mission({ parameter seq, ev, next.
   seq:add({
     if body = Kerbin {
       wait 30.
-      transfer["seek"](
-        freeze(time:seconds + 120), freeze(0), freeze(0), 0,
-        { parameter mnv. return -abs(mnv:orbit:periapsis - TARGET_RETURN_ALTITUDE). }).
-      transfer["exec"](true).
+      tr:seek(
+        fr(time:seconds + 120), fr(0), fr(0), 0,
+        { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_RET_ALT). }).
+      tr:exec(true).
       next().
     }
   }).
 
   seq:add({
-    if ship:altitude < REENTRY_BURN_ALTITUDE * 10 {
+    if ship:altitude < REENT_BURN_ALT * 10 {
       set warp to 0.
       wait 1.
       next().
@@ -97,7 +95,7 @@ local munflyby_mission is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
-    if ship:altitude < REENTRY_BURN_ALTITUDE {
+    if ship:altitude < REENT_BURN_ALT {
       ag10 off.
       lock steering to retrograde.
       lock throttle to 1.
@@ -113,4 +111,4 @@ local munflyby_mission is mission({ parameter seq, ev, next.
 
 }).
 
-export(munflyby_mission).
+export(m).
