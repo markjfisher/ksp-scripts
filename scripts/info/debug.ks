@@ -6,11 +6,15 @@ local tr is import("lib/transfer").
 local dv is improot("lib/deltav").
 
 local f1 is {
-  local dv_x is tr_mk:calc().
-  print "dv: " + dv_x[0].
-  print " t: " + dv_x[1].
-  set new_node to node(dv_x[1], 0, 0, dv_x[0]).
-  add new_node.
+  local trd is tr_mk:calc(). local dv is trd[0]. local t is choose time:seconds + 360 if trd[1] = 0 else trd[1].
+  print "dv: " + dv.
+  print " t: " + t.
+  tr:seek_SOI(Kerbin, 35000, t, dv, 50, {
+    parameter mnv.
+    // try to make it close to the estimated dv, so it doesn't localise over pe but with high dv earlier in search.
+    return -abs(2000 * (mnv:deltav:mag - dv)).
+  }).
+  // tr:seek_SOI(Kerbin, 35000, t, dv, 50).
 }.
 
 f1().

@@ -18,27 +18,33 @@
   }
 
   function seek {
-    parameter t, r, n, p, fitFn, d is list(t, r, n, p), fit is orbFit(fitFn@).
-    set d to optmz(d, fit, 5).
-    set d to optmz(d, fit, 1).
-    set d to optmz(d, fit, 0.05).
+    parameter t, r, n, p, fitFn, stp is 50, d is list(t, r, n, p), fit is orbFit(fitFn@).
+    local steps is list(50, 5, 0.5). local sI is steps:iterator.
+    until not sI:next {
+      if sI:value <= stp set d to optmz(d, fit, sI:value).
+    }
     fit(d). wait 0. return d.
   }
 
   function emptyCond { parameter mnv. return 0. }
 
   function seek_SOI {
-    parameter tBody, tPeri, t is time:seconds + 600, p is 500, condFn is emptyCond@.
+    parameter tBody, tPeri, t is time:seconds + 400, p is 200, stp is 50, condFn is emptyCond@.
     local d is seek(t, 0, 0, p, {
-      parameter mnv. if (mnv:orbit:eta:apoapsis > INF) { return -INF. }
+      parameter mnv.
+      if (mnv:orbit:eta:apoapsis > INF) { return -INF. }
       local cfv is condFn(mnv).
-      if tfTo(mnv:orbit, tBody) return 1.
-      return -closestApp(tBody, time:seconds + mnv:eta, time:seconds + mnv:eta + mnv:orbit:period) + cfv.
-    }).
+      local transfers is tfTo(mnv:orbit, tBody).
+      if transfers return 1.
+      local x is -closestApp(tBody, time:seconds + mnv:eta, time:seconds + mnv:eta + mnv:orbit:period) + cfv.
+      return x.
+    }, stp).
     return seek(d[0], d[1], d[2], d[3], {
-      parameter mnv. if not tfTo(mnv:orbit, tBody) return -INF.
-      return -abs(mnv:orbit:nextpatch:periapsis - tPeri).
-    }).
+      parameter mnv.
+      if not tfTo(mnv:orbit, tBody) return -INF.
+      local cfv is condFn(mnv).
+      return -abs(mnv:orbit:nextpatch:periapsis - tPeri) + cfv.
+    }, stp).
   }
 
   function tfTo { parameter tOrb, tBody. return (tOrb:hasnextpatch and tOrb:nextpatch:body = tBody). }

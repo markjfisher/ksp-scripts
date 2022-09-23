@@ -13,15 +13,14 @@
     local foundSeg is false. local needFix is false.
     until foundSeg or sT >= maxT {
       local sA is o:ang(b, sT). local eA is o:ang(b, eT).
-      if (a > segAng and a < (360 - segAng)) and (eA >= a and sA <= a and sA < eA) {
-        set foundSeg to true.
-      }
+      local x1 is true. // (a > segAng and a < (360 - segAng)). TODO: why don't I need this?
+      local x2 is (eA >= a and sA <= a and sA < eA).
+      local x is x1 and x2.
+      if x { set foundSeg to true. }
       if (a <= segAng or a >= (360 - segAng)) and (eA < sA) {
         local fa is choose a if a < segAng else a - 360.
         local negSA is sA - 360.
-        if fa >= negSA and fa <= eA {
-          set needFix to true. set foundSeg to true.
-        }
+        if fa >= negSA and fa <= eA { set needFix to true. set foundSeg to true. }
       }
       if not foundSeg { set sT to eT. set eT to eT + tSeg. }
     }
@@ -42,6 +41,7 @@
       if (aE >= a and aM <= a) set sT to mT. else set eT to mT.
       set mT to (sT + eT) / 2.
     }
+    clearvecdraws().
     return mT.
   }
 

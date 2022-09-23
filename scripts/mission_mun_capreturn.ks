@@ -1,5 +1,6 @@
 local tr is import("lib/transfer").
 local tr_km is import("lib/tr_kerbin_mun.ks").
+local tr_mk is import("lib/tr_mun_kerbin.ks").
 local mission is import("lib/mission").
 local launch is improot("launch").
 
@@ -18,7 +19,7 @@ local m is mission({ parameter seq, ev, next.
 
   seq:add({
     local trd is tr_km:calc(). local dv is trd[0]. local t is choose time:seconds + 360 if trd[1] = 0 else trd[1].
-    tr:seek_SOI(Mun, TGT_MUNALT, t, dv).
+    tr:seek_SOI(Mun, TGT_MUNALT, t, dv, 5).
     tr:exec(true).
     next().
   }).
@@ -48,8 +49,10 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
-    wait 10. local betweenTime is time:seconds + (eta:periapsis * 0.77). // roughly good exit
-    tr:seek_SOI(Kerbin, TGT_RETALT, betweenTime, 300).
+    local trd is tr_mk:calc(). local dv is trd[0]. local t is choose time:seconds + 360 if trd[1] = 0 else trd[1].
+    tr:seek_SOI(Kerbin, TGT_RETALT, t, dv, 25, {
+      parameter mnv. return -abs(2000 * (mnv:deltav:mag - dv)).
+    }).
     tr:exec(true).
     next().
   }).
