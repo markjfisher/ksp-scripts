@@ -8,12 +8,14 @@
   // The ship must have 2 initial stages, 1 for the engines, 2nd for the clamps.
   // It does not auto-stage when fuel runs out, you need to add a sensor to the tank for that.
 
-  // Cheers Kevin libs for the circularization.
-  local transfer is improot("transfer").
-  local freeze is transfer["freeze"].
+  // ACTION GROUPS
+  // AG5 is Fairings
+  // AG10 is autodeploy for anything custom (done at deployAlt height)
 
-  // TODO: add autoFairing
-  // TODO: Abort should trickle up
+  local l_version is "v1.0.0".
+
+  local transfer is improot("lib/transfer").
+  local freeze is transfer:freeze.
 
   local launch is lex(
     "exec", exec@
@@ -41,7 +43,7 @@
   local finalThrustAdj is 0.9.
   local lockAlt is 40000.
   local fairingAlt is 50000.
-  local deployAlt is 70000.
+  local deployAlt is 71000.
 
   // params to locals
   local desiredInclination is 0.
@@ -57,6 +59,7 @@
       circ is true,
       inverted is false. // pass in true to invert flight which just rotates the ship so that East is UP on navball
 
+    print "launch, " + l_version.
     set desiredInclination to inc.
     set desiredApoapsis to apo.
     set shouldCirc to circ.
@@ -157,7 +160,7 @@
       if (altitude > tLimitAlt) and not thrustLimited { limitThrust(). }
       if (shipTWR() < thrustAdj - 0.1) and thrustLimited and not upperLimited { limitThrust(). }
       if (altitude > deployAlt) and not deployed { autoDeploy(). }
-      // if (altitude > fairingAlt) and not fairingStaged { autoFairing(). }
+      if (altitude > fairingAlt) and not fairingStaged { autoFairing(). }
       if (altitude > desiredApoapsis * 1000 - 2000) set waitPeriod to 0.05.
       if desiredInclination < 80 or desiredInclination > 100 {
         if (altitude < lockAlt) and not aborted {
@@ -193,8 +196,43 @@
     set aborted to true.
   }
 
+  function autoFairing {
+    local fairing is false.
+    local partlist is 0.
+    list parts in partlist.
+    for part in partlist {
+      if (part:NAME = "fairingSize1" or
+          part:NAME = "fairingSize1p5" or
+          part:NAME = "fairingSize2" or
+          part:NAME = "fairingSize3" or
+          part:NAME = "fairingSize4" or
+          part:NAME = "restock-fairing-base-0625-1" or
+          part:NAME = "restock-fairing-base-1875-1" or
+          part:NAME = "KzProcFairingSide1" or
+          part:NAME = "MainSailorFairing001" or
+          part:NAME = "MainSailorFairing001BK" or
+          part:NAME = "MainSailorFairing001SyzWht" or
+          part:NAME = "MainSailorFairingConicBlk" or
+          part:NAME = "MainSailorFairingConicGamma" or
+          part:NAME = "MainSailorFairingConicWht" or
+          part:NAME = "MainSailorFairingEggBlk" or
+          part:NAME = "MainSailorFairingEggGamma" or
+          part:NAME = "MainSailorFairingEggWht" or
+          part:NAME = "FASAStrFairing3m4x"
+      ) {
+        set fairing to true.
+        break.
+      }
+    }
+    if fairing {
+      ag5 on.
+      if verbose { print " ". print "staging fairing.". }
+    }
+    set fairingstaged to true.
+  }
+
   function autoDeploy {
-    ag10 on. // lights on.
+    ag10 on.
     if verbose { print " ". print "Extending deployable equipment". }
     set deployed to true.
   }
@@ -224,7 +262,7 @@
       if thrustLimited { set upperLimited to true. }
       set thrustLimited to true.
     } else {
-      print "limit thrust is staging. we have no available thrust available".
+      if verbose { print "No available thrust in current stage". print "limitThrust performing stage". }
       stage.
       wait 0.1.
     }
@@ -243,11 +281,17 @@
   }
 
   function circularize {
-    transfer["seek"](
-      freeze(time:seconds + eta:apoapsis),
-      freeze(0), freeze(0), 0,
-      { parameter mnv. return -mnv:orbit:eccentricity. }
-    ).
+    wait until (altitude > 70000).
+    local futurevelocity is sqrt(velocity:orbit:mag^2 - 2 * body:mu * (1 / (body:radius + altitude) - 1 / (body:radius + orbit:apoapsis))).
+    local circvelocity is sqrt(body:mu/(orbit:apoapsis + body:radius)).
+    local newnode is node(time:seconds+eta:apoapsis, 0, 0, circvelocity-futurevelocity).
+    add newnode.
+
+//    transfer["seek"](
+//      freeze(time:seconds + eta:apoapsis),
+//      freeze(0), freeze(0), 0,
+//      { parameter mnv. return -mnv:orbit:eccentricity. }
+//    ).
     transfer["exec"](true).
     lock throttle to 0.
     lockToPrograde().

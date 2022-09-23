@@ -13,8 +13,8 @@ local m is mission({ parameter seq, ev, next.
 
   seq:add({
     launch:exec(0, TGT_ALT / 1000, false).
-    // need stage as mnv_time can't handle multi-stage
-    wait 1. stage. wait 1.
+//    // need stage as mnv_time can't handle multi-stage
+//    wait 1. stage. wait 1.
     next().
   }).
 
@@ -97,12 +97,9 @@ local m is mission({ parameter seq, ev, next.
   seq:add({
     if ship:altitude < REENT_BURN_ALT {
       ag10 off.
-      lock steering to retrograde.
-      lock throttle to 1.
+      lock steering to retrograde. wait 5. lock throttle to 1.
       wait until ship:maxthrust < 1.
-      lock throttle to 0.
-      stage. wait 1.
-      lock steering to srfretrograde.
+      lock throttle to 0. stage. wait 1. lock steering to srfretrograde.
       next().
     }
   }).

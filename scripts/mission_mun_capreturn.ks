@@ -1,4 +1,5 @@
 local tr is import("lib/transfer").
+local tr_km is import("lib/tr_kerbin_mun.ks").
 local mission is import("lib/mission").
 local launch is improot("launch").
 
@@ -8,17 +9,16 @@ local TGT_RETALT is 35000.
 local RENT_BURNALT is 100000.
 local fr is tr:freeze.
 local warping is false.
-local aborted is false.
-local havePrintedAbortMessage is false.
 
 local m is mission({ parameter seq, ev, next.
   seq:add({
-    launch:exec(0, TGT_ALT / 1000, true).
-    wait 1. stage. wait 1. next().
+    launch:exec(0, TGT_ALT / 1000, false).
+    next().
   }).
 
   seq:add({
-    tr:seek_SOI(Mun, TGT_MUNALT, time:seconds + 360, 860).
+    local trd is tr_km:calc(). local dv is trd[0]. local t is choose time:seconds + 360 if trd[1] = 0 else trd[1].
+    tr:seek_SOI(Mun, TGT_MUNALT, t, dv).
     tr:exec(true).
     next().
   }).
@@ -81,7 +81,7 @@ local m is mission({ parameter seq, ev, next.
   seq:add({
     if ship:altitude < RENT_BURNALT {
       ag10 off.
-      lock steering to retrograde. lock throttle to 1.
+      lock steering to retrograde. wait 5. lock throttle to 1.
       wait until ship:maxthrust < 1.
       lock throttle to 0. stage. wait 1. lock steering to srfretrograde.
       next().

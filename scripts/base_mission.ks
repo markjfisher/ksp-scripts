@@ -184,12 +184,9 @@ local vanguard_mission is mission({ parameter seq, ev, next.
 
     seq:add({
         if ship:altitude < REENTRY_BURN_ALTITUDE {
-            lock steering to retrograde.
-            lock throttle to 1.
+            lock steering to retrograde. wait 5. lock throttle to 1.
             wait until ship:maxthrust < 1.
-            lock throttle to 0.
-            stage. wait 0.
-            lock steering to srfretrograde.
+            lock throttle to 0. stage. wait 0. lock steering to srfretrograde.
             next().
         }
     }).
