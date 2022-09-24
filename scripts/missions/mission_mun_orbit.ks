@@ -3,8 +3,8 @@ local tr_km is import("lib/tr_kerbin_mun.ks").
 local mission is import("lib/mission").
 local launch is improot("launch").
 
-local TGT_ALT is 82000.
-local TGT_MUNALT is 30000.
+local TGT_ALT is 84000.
+local TGT_MUNALT is 426828.
 local fr is tr:freeze.
 
 local m is mission({ parameter seq, ev, next.

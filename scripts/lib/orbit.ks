@@ -8,7 +8,7 @@
     parameter o1, t is time:seconds.
     local pN is n(body). // normal to its current orbit plane of the shared body
     local bP is body:position.
-    local v1 is vxcl(pN, (o1:position - bP):normalized).
+    local v1 is vxcl(pN, (positionAt(o1, t) - bP):normalized).
     local v2 is vxcl(pN, (positionAt(ship, t) - bP):normalized).
     local ang is vang(v1, v2).
     if vdot(v2, vxcl(v1, o1:velocity:orbit)) < 0 {

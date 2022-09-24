@@ -1,6 +1,6 @@
 @echo off
 
-set KSP_FOLDER="C:\KSP\Kerbal Space Program - current\Ships\Script"
+set KSP_FOLDER="C:\Steam\steamapps\common\Kerbal Space Program\Ships\Script"
 
 echo "Deleting old scripts"
 del /s /q %KSP_FOLDER%\*

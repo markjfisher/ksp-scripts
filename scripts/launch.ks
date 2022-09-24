@@ -12,14 +12,12 @@
   // AG5 is Fairings
   // AG10 is autodeploy for anything custom (done at deployAlt height)
 
-  local l_version is "v1.0.0".
+  local l_version is "v1.0.1".
 
   local transfer is improot("lib/transfer").
   local freeze is transfer:freeze.
 
-  local launch is lex(
-    "exec", exec@
-  ).
+  local launch is lex("exec", exec@).
 
   local thrustSetting is 1.
   local thrustLimiter is 1.
@@ -287,11 +285,6 @@
     local newnode is node(time:seconds+eta:apoapsis, 0, 0, circvelocity-futurevelocity).
     add newnode.
 
-//    transfer["seek"](
-//      freeze(time:seconds + eta:apoapsis),
-//      freeze(0), freeze(0), 0,
-//      { parameter mnv. return -mnv:orbit:eccentricity. }
-//    ).
     transfer["exec"](true).
     lock throttle to 0.
     lockToPrograde().

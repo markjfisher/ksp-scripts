@@ -24,10 +24,13 @@
       body:position - b:position,
       yellow, "t", 1, true, 0.2, false, true
     ).
+
   }
 
+  function defaultChecker { parameter sT, eT, o. return true. }
+
   function ex_t { // calc exit time for a transfer to body b.
-    parameter a, b, mP is 1. // target angle, target body, max periods
+    parameter a, b, mP is 1, checker is defaultChecker@. // target angle, target body, max periods
 
     local nseg is 13.
     local tSeg is orbit:period / nseg.
@@ -48,6 +51,7 @@
       local x is x1 and x2.
       print "x: " + x + ", (x1: " + x1 + ", x2: " + x2 + ")".
       if x {
+        print "a case".
         set foundSeg to true.
       }
       if (a <= segAng or a >= (360 - segAng)) and (eA < sA) {
@@ -55,12 +59,16 @@
         local fa is choose a if a < segAng else a - 360.
         local negSA is sA - 360.
         if fa >= negSA and fa <= eA {
+          print "b case".
           set needFix to true. set foundSeg to true.
         }
       }
+      if foundSeg set foundSeg to checker(sT, eT, o).
       if not foundSeg {
-        print "nope".
+        print "not found, moving around".
         set sT to eT. set eT to eT + tSeg.
+      } else {
+        wait 2.
       }
     }
 
