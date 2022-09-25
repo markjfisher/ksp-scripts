@@ -1,4 +1,4 @@
-{ local o is lex("norm", n@, "ang", a@).
+{ local o is lex("norm", n@, "ang", a@, "circ_node", circ_node@).
   function n {
     parameter b. return vcrs(b:velocity:orbit:normalized, (b:body:position - b:position):normalized).
   }
@@ -15,6 +15,14 @@
       set ang to 360 - ang.
     }
     return ang.
+  }
+
+  function circ_node {
+    wait until (altitude > 70000).
+    local futurevelocity is sqrt(velocity:orbit:mag^2 - 2 * body:mu * (1 / (body:radius + altitude) - 1 / (body:radius + orbit:apoapsis))).
+    local circvelocity is sqrt(body:mu/(orbit:apoapsis + body:radius)).
+    local newnode is node(time:seconds+eta:apoapsis, 0, 0, circvelocity-futurevelocity).
+    add newnode.
   }
 
   export(o).

@@ -1,6 +1,7 @@
 {
   local core is lex("ex_t", ex_t@).
   local o is import("lib/orbit").
+  local dbg is import("lib/ds").
 
   function drawSegment {
     parameter t1, t2, b.
@@ -38,34 +39,33 @@
     local sT is time:seconds + 60. local eT is sT + tSeg.
     local maxT is sT + orbit:period * mP.
     local foundSeg is false. local needFix is false.
-    print "looking for " + a + ", segAng: " + segAng.
+    dbg:out("[core ex_t] looking for " + a + ", segAng: " + segAng).
     until foundSeg or sT >= maxT {
-      print "b, sT, eT: " + b + ", " + ship + ", " + ship:body + ", " + sT + ", " + eT.
       local sA is o:ang(b, sT). local eA is o:ang(b, eT).
-      print "sA: " + round(sA, 3) + ", eA: " + round(eA, 3).
 
+      dbg:out("[core ex_t] b, sT, eT: " + b + ", " + sT + ", " + eT + ", sA: " + round(sA, 3) + ", eA: " + round(eA, 3)).
       drawSegment(sT, eT, b).
 
-      local x1 is true. // (a > segAng and a < (360 - segAng)).
+      local x1 is (a > segAng and a < (360 - segAng)). // TODO: why isnt this needed? maybe it is
       local x2 is (eA >= a and sA <= a and sA < eA).
-      local x is x1 and x2.
-      print "x: " + x + ", (x1: " + x1 + ", x2: " + x2 + ")".
+      local x is true and x2.
+      dbg:out("[core ex_t] x: " + x + ", (x1: " + x1 + " (forcing to TRUE), x2: " + x2 + ")").
       if x {
-        print "a case".
+        dbg:out("[core ex_t] normal case, found segment").
         set foundSeg to true.
       }
-      if (a <= segAng or a >= (360 - segAng)) and (eA < sA) {
-        print "special check #1".
+      if (a <= segAng or a >= (360 - segAng)) and (eA < sA) and not foundSeg {
+        dbg:out("[core ex_t] testing around origin case").
         local fa is choose a if a < segAng else a - 360.
         local negSA is sA - 360.
         if fa >= negSA and fa <= eA {
-          print "b case".
+        dbg:out("[core ex_t] origin case, setting fix needed, found segment").
           set needFix to true. set foundSeg to true.
         }
       }
       if foundSeg set foundSeg to checker(sT, eT, o).
       if not foundSeg {
-        print "not found, moving around".
+        dbg:out("[core ex_t] not found, moving around").
         set sT to eT. set eT to eT + tSeg.
       } else {
         wait 2.
@@ -73,27 +73,26 @@
     }
 
     if not foundSeg {
-      print "No segment for angle " + a.
+      dbg:out("[core ex_t] No segment for angle " + a).
       return 0.
     }
 
-    print "core: a: " + a + ", needFix: " + needFix.
+    dbg:out("[core ex_t] Searching in bounded for a: " + round(a,3) + ", needFix: " + needFix + " in region [" + round(sT,3) + ", " + round(eT,3) + "]").
     set a to choose a - 360 if needFix else a.
     local mT is (sT + eT) / 2.
     until (eT - sT < 0.1) {
-      local aS is o:ang(b, sT).
-      local aM is o:ang(b, mT).
-      local aE is o:ang(b, eT).
-      print "   sT, mT, eT: " + round(sT, 3) + ", " + round(mT, 3) + ", " + round(eT, 3).
-      print "#1 aS, aM, aE: " + round(aS, 3) + ", " + round(aM, 3) + ", " + round(aE, 3).
+      local aS is o:ang(b, sT). local aM is o:ang(b, mT). local aE is o:ang(b, eT).
+      dbg:out("[core ex_t]    sT, mT, eT: " + round(sT, 3) + ", " + round(mT, 3) + ", " + round(eT, 3)).
+      dbg:out("[core ex_t] #1 aS, aM, aE: " + round(aS, 3) + ", " + round(aM, 3) + ", " + round(aE, 3)).
       set aS to choose aS - 360 if needFix else aS.
       set aM to choose aM - 360 if needFix else aM.
-      print "#2 aS, aM, aE: " + round(aS, 3) + ", " + round(aM, 3) + ", " + round(aE, 3).
+      dbg:out("[core ex_t] #2 aS, aM, aE: " + round(aS, 3) + ", " + round(aM, 3) + ", " + round(aE, 3)).
       if (aE >= a and aM <= a) set sT to mT. else set eT to mT.
       set mT to (sT + eT) / 2.
-      print "mT: " + mT.
+      dbg:out("[core ex_t] setting mT to: " + round(mT,3)).
     }
     clearvecdraws().
+    dbg:out("[core ex_t] returning mT: " + round(mT,3)).
     return mT.
   }
 

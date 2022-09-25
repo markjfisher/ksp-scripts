@@ -3,9 +3,11 @@ runpath("1:/knu.ks").
 local tr is import("lib/transfer").
 
 local f1 is {
-  if hasnode tr:exec(true). else {
+  parameter t_wrp.
+  if hasnode tr:exec(true, t_wrp). else {
     print "no node to execute.".
   }
 }.
 
-f1().
+parameter t_wrp is 60.
+f1(t_wrp).

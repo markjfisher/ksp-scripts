@@ -9,12 +9,13 @@
   // It does not auto-stage when fuel runs out, you need to add a sensor to the tank for that.
 
   // ACTION GROUPS
-  // AG5 is Fairings
-  // AG10 is autodeploy for anything custom (done at deployAlt height)
+  // AG5  Fairings
+  // AG10 Autodeploy for anything custom (done at deployAlt height)
 
-  local l_version is "v1.0.1".
+  local l_version is "v1.0.2".
 
   local transfer is improot("lib/transfer").
+  local orbit is improot("lib/orbit").
   local freeze is transfer:freeze.
 
   local launch is lex("exec", exec@).
@@ -57,7 +58,7 @@
       circ is true,
       inverted is false. // pass in true to invert flight which just rotates the ship so that East is UP on navball
 
-    print "launch, " + l_version.
+    print "launch: " + l_version.
     set desiredInclination to inc.
     set desiredApoapsis to apo.
     set shouldCirc to circ.
@@ -236,7 +237,7 @@
   }
 
   function lockToPrograde {
-    if verbose { print "locking to prograde". }
+    if verbose print "locking to prograde".
     lock steering to prograde + r(0, 0, myRoll()).
     set proLocked to true.
   }
@@ -260,7 +261,7 @@
       if thrustLimited { set upperLimited to true. }
       set thrustLimited to true.
     } else {
-      if verbose { print "No available thrust in current stage". print "limitThrust performing stage". }
+      if verbose print "No available thrust in current stage, moving to next stage".
       stage.
       wait 0.1.
     }
@@ -279,13 +280,8 @@
   }
 
   function circularize {
-    wait until (altitude > 70000).
-    local futurevelocity is sqrt(velocity:orbit:mag^2 - 2 * body:mu * (1 / (body:radius + altitude) - 1 / (body:radius + orbit:apoapsis))).
-    local circvelocity is sqrt(body:mu/(orbit:apoapsis + body:radius)).
-    local newnode is node(time:seconds+eta:apoapsis, 0, 0, circvelocity-futurevelocity).
-    add newnode.
-
-    transfer["exec"](true).
+    orbit:circ_node().
+    transfer:exec(true).
     lock throttle to 0.
     lockToPrograde().
   }

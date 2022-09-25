@@ -1,11 +1,11 @@
 {
   local INF is 2^64.
   local tf is lex("exec", exec@, "freeze", freeze@, "seek_SOI", seek_SOI@, "seek", seek@).
-  local dvlib is improot("lib/deltav").
+  local dvlib is improot("lib/deltav"). local dbg is import("lib/ds").
 
   function exec {
-    parameter wrp is 0, t_wrp is 30, n is nextnode, v is n:burnvector, stT is time:seconds + n:eta - mnv_time(v:mag)[0].
-    lock steering to n:burnvector. if wrp warpto(stT - t_wrp). wait until time:seconds >= stT.
+    parameter wrp is 0, n is nextnode, v is n:burnvector, stT is time:seconds + n:eta - mnv_time(v:mag)[0].
+    lock steering to n:burnvector. if wrp warpto(stT - 60). wait until time:seconds >= stT.
     local st is 0. local t is 0. lock throttle to t.
     until vdot(n:burnvector, v) < 0 or (st and t <= 0.002) {
       set st to 1. if maxthrust < 0.1 {
@@ -19,9 +19,10 @@
 
   function seek {
     parameter t, r, n, p, fitFn, stp is 50, d is list(t, r, n, p), fit is orbFit(fitFn@).
-    local steps is list(100, 50, 20, 5, 0.5, 0.05). local sI is steps:iterator.
+    local steps is list(100, 20, 5, 0.5, 0.05). local sI is steps:iterator.
     until not sI:next {
       if sI:value <= stp set d to optmz(d, fit, sI:value).
+      dbg:out("[tf:seek] optmz[" + sI:value + "] d: " + d).
     }
     fit(d). wait 0. return d.
   }
@@ -32,18 +33,29 @@
     parameter tBody, tPeri, t is time:seconds + 400, p is 200, stp is 50, condFn is emptyCond@.
     local d is seek(t, 0, 0, p, {
       parameter mnv.
-      local cfv is condFn(mnv).
-      local tfs is tfTo(mnv:orbit, tBody). if tfs return 1.
+      local cfv is condFn(mnv). if cfv <> 0 dbg:out("[tf:seek_SOI] #1 extra adjustment: " + cfv).
+      local tfs is tfTo(mnv:orbit, tBody). dbg:out("[tf:seek_SOI] #1 transfers? (true will shortcut fit of 1): " + tfs).
+      if tfs return 1.
       local per is choose mnv:orbit:eta:transition if mnv:orbit:eta:apoapsis > INF else mnv:orbit:period.
       local x is -closestApp(tBody, time:seconds + mnv:eta, time:seconds + mnv:eta + per) + cfv.
+      dbg:out("[tf:seek_SOI] seek1 fit: " + x).
       return x.
     }, stp).
-    return seek(d[0], d[1], d[2], d[3], {
+    dbg:out("[tf:seek_SOI] seek1 created d: " + d).
+    local d2 is seek(d[0], d[1], d[2], d[3], {
       parameter mnv.
-      if not tfTo(mnv:orbit, tBody) return -INF.
-      local cfv is condFn(mnv).
-      return -abs(mnv:orbit:nextpatch:periapsis - tPeri) + cfv.
+      if not tfTo(mnv:orbit, tBody) { dbg:out("[tf:seek_SOI] #2 - no transfer"). return -INF. }
+      local cfv is condFn(mnv). if cfv <> 0 dbg:out("[tf:seek_SOI] #2 extra adjustment: " + cfv).
+      local x is -abs(mnv:orbit:nextpatch:periapsis - tPeri) + cfv.
+      dbg:out("[tf:seek_SOI] seek2 fit: " + x).
+      return x.
     }, stp).
+    dbg:out("[tf:seek_SOI] d2: " + d2).
+    if hasnode {
+      local tfs is tfTo(nextnode:orbit, tBody).
+      dbg:out("[tf:seek_SOI] FINAL NODE transfers? " + tfs).
+    }
+    return d2.
   }
 
   function tfTo { parameter tOrb, tBody. return (tOrb:hasnextpatch and tOrb:nextpatch:body = tBody). }

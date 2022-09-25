@@ -19,7 +19,7 @@
       local x2 is (eA >= a and sA <= a and sA < eA).
       local x is x1 and x2.
       if x { set foundSeg to true. }
-      if (a <= segAng or a >= (360 - segAng)) and (eA < sA) {
+      if (a <= segAng or a >= (360 - segAng)) and (eA < sA) and not foundSeg {
         local fa is choose a if a < segAng else a - 360.
         local negSA is sA - 360.
         if fa >= negSA and fa <= eA { set needFix to true. set foundSeg to true. }
