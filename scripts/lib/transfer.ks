@@ -3,7 +3,9 @@
   local tf is lex("exec", exec@, "freeze", freeze@, "seek_SOI", seek_SOI@, "seek", seek@).
   local dvlib is improot("lib/deltav").
 
-  function exec {
+  function exec { parameter wrp is 0, t_wrp is 30. until not hasnode {e(wrp, t_wrp).}}
+
+  function e {
     parameter wrp is 0, t_wrp is 30, n is nextnode, v is n:burnvector, stT is time:seconds + n:eta - mnv_time(v:mag)[0].
     lock steering to n:burnvector. if wrp warpto(stT - t_wrp). wait until time:seconds >= stT.
     local st is 0. local t is 0. lock throttle to t.
