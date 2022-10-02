@@ -29,19 +29,17 @@ sed < $IN_FILE -r '
   s# \{#{#g;              # remove space before {
   /^$/d                   # empty lines
   ' | \
+# this stops us from pulling everything into perl
 sed ':a;N;$!ba;s#\n##g;   # remove all remaining \n' | \
-# and finally deal with wait until with negative lookahead, which sed can't do. turns "wait until a<0.1.set x to 1" into "wait until a<0.1. set x to 1".
+# and finally deal with lookahead, which sed can't do
 perl -pe '
-  s#\.([^:.\[\] ]+):#. \1:#g;   # special case where next word after a dot has : after it, may go wrong on very embedded bracketed cases
-  s#\. }#.}#g;                  # ". }" to ".}"
-
   # (char or num).char e.g. "local x is x1 and x2.if x"
   # split at the fullstop, but not inside quotes like import("foo.bar")
   # from https://stackoverflow.com/questions/6462578/regex-to-match-all-instances-not-inside-quotes
   s#([a-z][a-z0-9]*)\.([a-z])(?=([^"]*"[^"]*")*[^"]*$)#\1. \2#gi;
 
-  s#wait until (.*?\.(?![0-9]))#wait until \1 #gi;           # turns "wait until a<0.1.set x to 1" into "wait until a<0.1. set x to 1".
+  #s#wait until (.*?\.(?![0-9]))#wait until \1 #gi;           # turns "wait until a<0.1.set x to 1" into "wait until a<0.1. set x to 1".
   s# ([^:]+:[^.]+\.(?![0-9]))([^ }])# \1 \2#gi;              # split cases like tr:freeze.local after the fullstop, but not "ship:availablethrust<0.1"
   s#[ ]+# #g;                                                # re-remove double spaces that crept in.
-  s#([\)}]\.) #\1#g;
+  s#([\)}]\.) #\1#g;                                         # ). or }. with space after it, remove space
 '
