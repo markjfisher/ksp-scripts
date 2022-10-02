@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# I tried to reduce this to a single perl script but it kept failing.
+
 if [ $# -ne 1 ] ; then
   echo "Usage: $(basename $0) file.ks > outfile.ks"
   exit 1
