@@ -1,6 +1,5 @@
 local tr is import("lib/transfer").
 local o is import("lib/orbit").
-local tr_k_min is import("lib/tr_kerbin_minmus.ks").
 local mission is import("lib/mission").
 local launch is improot("launch").
 
@@ -21,7 +20,8 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
-    local trd is tr_k_min:calc(). local dv is trd[0]. local t is choose time:seconds + 360 if trd[1] = 0 else trd[1].
+    local bm is addons:astrogator:calculateBurns(Mun).
+    tr:seek_SOI(Minmus, TGT_BODY_ALT, bm[0]:atTime, bm[0]:totalDV, 50).
     tr:seek_SOI(Minmus, TGT_BODY_ALT, t, dv, 100).
     tr:exec(true, 90).
     next().

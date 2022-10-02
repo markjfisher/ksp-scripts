@@ -8,13 +8,20 @@ local warping is false.
 
 local m is mission({ parameter seq, ev, next.
   seq:add({
+    addons:astrogator:create(Kerbin, false).
+    tr:exec(true).
+    next().
+  }).
+
+  seq:add({
     if body = Kerbin {
-      wait 30. tr:seek(
+      wait 10. tr:seek(
         fr(time:seconds + 120), fr(0), fr(0), 0,
         { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_RETALT). }).
       tr:exec(true).
       next().
     }
+    wait 0.2.
   }).
 
   seq:add({

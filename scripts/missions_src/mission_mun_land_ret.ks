@@ -1,6 +1,4 @@
 local tr is import("lib/transfer").
-local tr_km is import("lib/tr_kerbin_mun.ks").
-local tr_mk is import("lib/tr_mun_kerbin.ks").
 local mission is import("lib/mission").
 local descent is import("lib/descent").
 local launch is improot("launch").

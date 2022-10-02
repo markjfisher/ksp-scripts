@@ -1,6 +1,4 @@
 local tr is import("lib/transfer").
-local tr_km is import("lib/tr_kerbin_mun.ks").
-local tr_mk is import("lib/tr_mun_kerbin.ks").
 local mission is import("lib/mission").
 local launch is improot("launch").
 
@@ -18,8 +16,8 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
-    local trd is tr_km:calc(). local dv is trd[0]. local t is choose time:seconds + 360 if trd[1] = 0 else trd[1].
-    tr:seek_SOI(Mun, TGT_MUNALT, t, dv, 5).
+    local bm is addons:astrogator:calculateBurns(Mun).
+    tr:seek_SOI(Mun, TGT_MUNALT, bm[0]:atTime, bm[0]:totalDV, 5).
     tr:exec(true).
     next().
   }).
@@ -49,7 +47,9 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
-    local trd is tr_mk:calc(). local dv is trd[0]. local t is choose time:seconds + 360 if trd[1] = 0 else trd[1].
+    local bm is addons:astrogator:calculateBurns(Kerbin).
+    set dv to bm[0]:totalDV.
+    set t to bm[0]:atTime.
     tr:seek_SOI(Kerbin, TGT_RETALT, t, dv, 25, {
       parameter mnv. return -abs(2000 * (mnv:deltav:mag - dv)).
     }).
