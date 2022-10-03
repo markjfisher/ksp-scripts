@@ -121,10 +121,12 @@ local m is mission({ parameter seq, ev, next.
 
   seq:add({
     if body = Kerbin {
-      wait 30.
+      wait 10.
       tr:seek(fr(time:seconds + 120), fr(0), fr(0), 0, { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_RETALT). }).
       tr:exec(true).
       next().
+    } else {
+      wait 0.5.
     }
   }).
 
@@ -139,7 +141,7 @@ local m is mission({ parameter seq, ev, next.
     if ship:altitude < RENT_BURNALT {
       ag10 off.
       lock steering to retrograde. wait 5. lock throttle to 1.
-      wait until ship:maxthrust < 1.
+      wait until (ship:maxthrust < 1 or ship:orbit:periapsis < 0).
       lock throttle to 0. stage. wait 1. lock steering to srfretrograde.
       next().
     }

@@ -85,7 +85,7 @@ local m is mission({ parameter seq, ev, next.
     if ship:altitude < RENT_BURNALT {
       ag10 off.
       lock steering to retrograde. wait 5. lock throttle to 1.
-      wait until ship:maxthrust < 1.
+      wait until (ship:maxthrust < 1 or ship:orbit:periapsis < 0).
       lock throttle to 0. stage. wait 1. lock steering to srfretrograde.
       next().
     }

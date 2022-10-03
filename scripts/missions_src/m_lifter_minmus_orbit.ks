@@ -22,7 +22,6 @@ local m is mission({ parameter seq, ev, next.
   seq:add({
     local bm is addons:astrogator:calculateBurns(Mun).
     tr:seek_SOI(Minmus, TGT_BODY_ALT, bm[0]:atTime, bm[0]:totalDV, 50).
-    tr:seek_SOI(Minmus, TGT_BODY_ALT, t, dv, 100).
     tr:exec(true, 90).
     next().
   }).
