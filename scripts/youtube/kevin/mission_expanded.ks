@@ -1,9 +1,9 @@
 {
-  local f is "1:/runmode.ks".
+  local f is "1:/runmode".
   export({
-    parameter delegateMissionFunction.
+    parameter d.
     local r is 0.
-    if exists(f) set r to import("runmode.ks").
+    if exists(f) set r to import("runmode").
     local s is list().
     local e is lex().
     local n is {
@@ -15,7 +15,7 @@
       set r to m.
     }.
 
-    delegateMissionFunction(s,e,n).
+    d(s,e,n).
     return {
       until r >= s:length{
         s[r]().

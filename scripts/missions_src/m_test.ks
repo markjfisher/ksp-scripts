@@ -6,21 +6,22 @@ local INF is 2^64.
 
 local m is mission({ parameter seq, ev, next.
   seq:add({
-    print "test mission running".
-    next().
-  }).
-
-  seq:add({
+    parameter pro.
     local bm is addons:astrogator:calculateBurns(Mun).
     local t is bm[0]:atTime.
-    local dv is bm[0]:totalDV.
+    local dv is bm[0]:totalDV * 1.01. // add 1% to the dv as a start to give it the boost to start closer to retro
     tr:seek_SOI(Mun, TGT_MUNALT, t, dv, 20, {
       parameter mnv.
-      // get the inclination over 90. In practice it's either just over 0, or just under 180 for pro/retro
+      // prograde: get an inclination under 90
+      // retrograde: get an inclination over 90.
       if mnv:orbit:hasnextpatch {
-        return choose -INF if mnv:orbit:nextpatch:inclination < 90 else 0.
+        if pro {
+          return choose 0 if abs(mnv:orbit:nextpatch:inclination) < 90 else -INF.
+        } else {
+          return choose 0 if abs(mnv:orbit:nextpatch:inclination) > 90 else -INF.
+        }
       }
-      // mo patch means it hasn't reached target
+      // no patch means it hasn't reached target
       return -INF.
     }).
     next().
