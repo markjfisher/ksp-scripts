@@ -26,12 +26,12 @@ sed < $IN_FILE -r '
   s# ?< ?#<#g;            # whitespace around <
   s# ?> ?#>#g;            # whitespace around >
   s# ?\/ ?#\/#g;          # whitespace around /
-  s# ?\* ?#*#g;           # whitespace around /
+  s# ?\* ?#*#g;           # whitespace around *
   s#, #,#g;               # whitespace after ,
   s# \{#{#g;              # remove space before {
   /^$/d                   # empty lines
   ' | \
-# this stops us from pulling everything into perl
+# this stops us from pulling everything into perl, equivalent in perl merges files differently and I can't be arsed to work out why
 sed ':a;N;$!ba;s#\n##g;   # remove all remaining \n' | \
 # and finally deal with lookahead, which sed can't do
 perl -pe '
@@ -40,8 +40,9 @@ perl -pe '
   # from https://stackoverflow.com/questions/6462578/regex-to-match-all-instances-not-inside-quotes
   s#([a-z][a-z0-9]*)\.([a-z])(?=([^"]*"[^"]*")*[^"]*$)#\1. \2#gi;
 
-  #s#wait until (.*?\.(?![0-9]))#wait until \1 #gi;           # turns "wait until a<0.1.set x to 1" into "wait until a<0.1. set x to 1".
-  s# ([^:]+:[^.]+\.(?![0-9]))([^ }])# \1 \2#gi;              # split cases like tr:freeze.local after the fullstop, but not "ship:availablethrust<0.1"
-  s#[ ]+# #g;                                                # re-remove double spaces that crept in.
-  s#([\)}]\.) #\1#g;                                         # ). or }. with space after it, remove space
+  # split cases like "tr:freeze.local" after the fullstop, but not "ship:availablethrust<0.1", alternate would be to ensure between : and . there is only text
+  s# ([^:]+:[^.]+\.(?![0-9]))([^ }])# \1 \2#gi;
+
+  s#[ ]+# #g;          # re-remove double spaces that crept in.
+  s#([\)}]\.) #\1#g;   # "). " or "}. " remove space
 '
