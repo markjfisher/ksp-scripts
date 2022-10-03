@@ -15,7 +15,7 @@ local warping is false.
 
 local m is mission({ parameter seq, ev, next.
   seq:add({
-    launch:exec(0, TGT_ALT / 1000, false).
+    if ship:status = "prelaunch" launch:exec(0, TGT_ALT / 1000, false).
     next().
   }).
 
@@ -23,10 +23,8 @@ local m is mission({ parameter seq, ev, next.
     local bm is addons:astrogator:calculateBurns(Mun).
     local t is bm[0]:atTime.
     local dv is bm[0]:totalDV.
-    tr:seek_SOI(Mun, TGT_MUNALT, t, dv, 20, {
-      parameter mnv. return -abs(1000 * (mnv:deltav:mag - dv)).
-    }).
-    tr:exec(true).
+    tr:seek_SOI(Mun, TGT_MUNALT, t, dv, 20).
+    tr:exec(true, 20).
     next().
   }).
 
@@ -36,7 +34,8 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
-    if body = Mun { wait 20.
+    if body = Mun {
+      wait 20.
       tr:seek(fr(time:seconds + 120), fr(0), fr(0), 0, { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_MUNALT). }).
       tr:exec(true).
       next().
@@ -103,12 +102,8 @@ local m is mission({ parameter seq, ev, next.
 
   seq:add({
     local bm is addons:astrogator:calculateBurns(Kerbin).
-    set dv to bm[0]:totalDV.
-    set t to bm[0]:atTime.
-    tr:seek_SOI(Kerbin, TGT_RETALT, t, dv, 20, {
-      parameter mnv. return -abs(2000 * (mnv:deltav:mag - dv)).
-    }).
-    tr:exec(true).
+    tr:seek_SOI(Kerbin, TGT_RETALT, bm[0]:atTime, bm[0]:totalDV, 20).
+    tr:exec(true, 20).
     next().
   }).
 
@@ -131,9 +126,11 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
-    if ship:altitude < RENT_BURNALT * 10 { set warp to 0. wait 1. next().
+    if ship:altitude < RENT_BURNALT * 10 {
+      set warp to 0. wait 1. next().
     } else {
-      if not warping { set warping to true. set warp to 5. } wait 0.1.
+      if not warping { set warping to true. set warp to 5. }
+      wait 0.1.
     }
   }).
 
@@ -141,13 +138,13 @@ local m is mission({ parameter seq, ev, next.
     if ship:altitude < RENT_BURNALT {
       ag10 off.
       lock steering to retrograde. wait 5. lock throttle to 1.
-      wait until (ship:maxthrust < 1 or ship:orbit:periapsis < 0).
+      wait until ship:maxthrust < 1.
       lock throttle to 0. stage. wait 1. lock steering to srfretrograde.
       next().
     }
   }).
 
-  seq:add({ if ship:status = "Landed" { next(). } else { wait 0.5. } }).
+  seq:add({ if (ship:status = "Landed" or ship:status = "Splashed") next(). else wait 0.5. }).
 
 }).
 

@@ -48,7 +48,7 @@ local m is mission({ parameter seq, ev, next.
       ag10 off.
       lock steering to retrograde. wait 5. lock throttle to 1.
       // burn some off to slow us down, but cater for way too much DV left in the tanks
-      wait until (ship:maxthrust < 1 or ship:orbit:periapsis < 0).
+      wait until ship:maxthrust < 1.
       lock throttle to 0. stage. wait 1. lock steering to srfretrograde.
       next().
     } else {
