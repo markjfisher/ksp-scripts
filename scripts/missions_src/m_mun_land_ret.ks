@@ -145,7 +145,7 @@ local m is mission({ parameter seq, ev, next.
     }
   }).
 
-  seq:add({ if ship:status = "Landed" next(). }).
+  seq:add({ if ship:status = "Landed" { next(). } else { wait 0.5. } }).
 
 }).
 

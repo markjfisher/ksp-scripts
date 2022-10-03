@@ -1,4 +1,4 @@
-{ local o is lex("norm", n@, "ang", a@, "circ_node", circ_node@).
+{ local o is lex("norm", n@, "ang", a@, "circ_node", circ_node@, "cap_circ_node", cap_circ_node@).
   function n {
     parameter b. return vcrs(b:velocity:orbit:normalized, (b:body:position - b:position):normalized).
   }
@@ -18,10 +18,21 @@
   }
 
   function circ_node {
-    wait until (altitude > 70000).
+    // This is for kerbin circ when already in orbit...
+    parameter wait_alt is false, alt_height is 70000.
+    if wait_alt wait until (altitude > 70000).
     local futurevelocity is sqrt(velocity:orbit:mag^2 - 2 * body:mu * (1 / (body:radius + altitude) - 1 / (body:radius + orbit:apoapsis))).
     local circvelocity is sqrt(body:mu/(orbit:apoapsis + body:radius)).
     local newnode is node(time:seconds+eta:apoapsis, 0, 0, circvelocity-futurevelocity).
+    add newnode.
+  }
+
+  function cap_circ_node {
+    parameter wait_alt is false, alt_height is 70000.
+    if wait_alt wait until (altitude > 70000).
+    local futurevelocity is sqrt(velocity:orbit:mag^2 - 2 * body:mu * (1 / (body:radius + altitude) - 1 / (body:radius + orbit:periapsis))).
+    local circvelocity is sqrt(body:mu/(orbit:periapsis + body:radius)).
+    local newnode is node(time:seconds+eta:periapsis, 0, 0, circvelocity-futurevelocity).
     add newnode.
   }
 

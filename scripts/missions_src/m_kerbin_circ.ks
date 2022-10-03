@@ -1,7 +1,7 @@
 local mission is import("lib/mission").
 local launch is improot("launch").
 
-local TGT_ALT is 840000.
+local TGT_ALT is 82000.
 
 local m is mission({ parameter seq, ev, next.
   seq:add({
