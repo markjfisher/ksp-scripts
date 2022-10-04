@@ -35,7 +35,8 @@
     local d is seek(t, 0, 0, p, {
       parameter mnv.
       local cfv is condFn(mnv).
-      local tfs is tfTo(mnv:orbit, tBody). if tfs return 1.
+      local tfs is tfTo(mnv:orbit, tBody).
+      if tfs return 1.
       local per is choose mnv:orbit:eta:transition if mnv:orbit:eta:apoapsis > INF else mnv:orbit:period.
       local x is -closestApp(tBody, time:seconds + mnv:eta, time:seconds + mnv:eta + per) + cfv.
       return x.
