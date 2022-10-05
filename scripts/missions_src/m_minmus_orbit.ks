@@ -26,7 +26,7 @@ local m is mission({ parameter seq, ev, next.
 
   seq:add({
     if body = Minmus { wait 20.
-      tr:seek(fr(time:seconds + 120), fr(0), fr(0), 0, { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_BODY_ALT). }).
+      tr:seek(fr(time:seconds + 120), fr(0), fr(0), 0, 20 , list(), { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_BODY_ALT). }).
       tr:exec(true).
       next().
     }
@@ -34,8 +34,7 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
-    tr:seek(fr(time:seconds + eta:periapsis), fr(0), fr(0), 0, { parameter mnv. return - mnv:orbit:eccentricity. }).
-    tr:exec(true).
+    tr:circ().
     next().
   }).
 

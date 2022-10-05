@@ -15,9 +15,7 @@ local m is mission({ parameter seq, ev, next.
 
   seq:add({
     if body = Kerbin {
-      wait 10. tr:seek(
-        fr(time:seconds + 120), fr(0), fr(0), 0,
-        { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_RETALT). }).
+      wait 10. tr:seek(fr(time:seconds + 120), fr(0), fr(0), 0, 20, list(), { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_RETALT). }).
       tr:exec(true).
       next().
     }

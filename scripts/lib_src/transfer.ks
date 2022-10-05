@@ -1,6 +1,6 @@
 {
   local INF is 2^64.
-  local tf is lex("exec", exec@, "freeze", freeze@, "seek_SOI", seek_SOI@, "seek", seek@).
+  local tf is lex("exec", exec@, "freeze", f@, "seek_SOI", seek_SOI@, "seek", seek@, "hohmann", hohmann@, "circ", circ@).
   local dvlib is improot("lib/deltav").
 
   function exec { parameter wrp is 0, t_wrp is 30. until not hasnode {e(wrp, t_wrp).}}
@@ -130,8 +130,38 @@
     return rs.
   }
 
-  function freeze { parameter n. return lex("fr", n). }
+  function hohmann {
+    parameter a, t_wrp is 40.
+
+    // decide if this is a decreasing transfer or increasing.
+    // if decreasing: at apo decrease peri, then at peri decrease apo.
+    // if increasing: at peri increase apo, then at apo increace peri.
+    local t1 is choose (time:seconds + eta:apoapsis) if a < orbit:apoapsis else (time:seconds + eta:periapsis).
+    local t2 is choose (time:seconds + eta:periapsis) if a < orbit:apoapsis else (time:seconds + eta:apoapsis).
+    lock h1 to choose mnv:orbit:periapsis if a < orbit:apoapsis else mnv:orbit:apoapsis.
+    lock h2 to choose mnv:orbit:apoapsis if a < orbit:apoapsis else mnv:orbit:periapsis.
+
+    // first transfer
+    seek(f(t1), f(0), f(0), 0, 20, list(), { parameter mnv. return -abs(h1 - a). }).
+    exec(true, t_wrp).
+
+    // second transfer
+    seek(f(t2), f(0), f(0), 0, 20, list(), { parameter mnv. return -abs(h2 - a). }).
+    exec(true, t_wrp).
+  }
+
+  function circ {
+    parameter t_wrp is 40, at_peri is true.
+    local t is choose (time:seconds + eta:periapsis) if at_peri else (time:seconds + eta:apoapsis).
+    seek(f(t), f(0), f(0), 0, 20, list(), { parameter mnv. return -mnv:orbit:eccentricity. }).
+    exec(true, t_wrp).
+  }
+
+  // "freeze" - this wraps the value so it doesn't get changed when seeking
+  function f { parameter n. return lex("fr", n). }
+  // This is "frozen" function to check if a parameter is frozen or not
   function fr { parameter v. return (v+""):indexof("fr") <> -1. }
+  // Unfreeze to unlock the value
   function unfr { parameter v. if fr(v) return v["fr"]. else return v. }
   export(tf).
 }

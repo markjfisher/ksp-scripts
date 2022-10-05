@@ -1,5 +1,4 @@
 local tr is import("lib/transfer").
-local o is import("lib/orbit").
 local mission is import("lib/mission").
 local launch is improot("launch").
 
@@ -15,7 +14,8 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
-    o:circ_node(). tr:exec(true, 90).
+    // circ at apo as we just took off
+    tr:circ(90, false).
     next().
   }).
 
@@ -34,7 +34,7 @@ local m is mission({ parameter seq, ev, next.
 
   seq:add({
     if body = Minmus { wait 10.
-      tr:seek(fr(time:seconds + 180), fr(0), fr(0), 0, { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_BODY_ALT). }).
+      tr:seek(fr(time:seconds + 180), fr(0), fr(0), 0, 20, list(), { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_BODY_ALT). }).
       rcs on. tr:exec(true, 90). rcs off.
       next().
     }
@@ -42,8 +42,9 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
-    tr:seek(fr(time:seconds + eta:periapsis), fr(0), fr(0), 0, { parameter mnv. return - mnv:orbit:eccentricity. }).
-    rcs on. tr:exec(true, 90). rcs off.
+    rcs on.
+    tr:circ(90).
+    rcs off.
     next().
   }).
 

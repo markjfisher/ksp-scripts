@@ -15,6 +15,8 @@ local f1 is {
     0, // radial - x
     0, // normal - y
     0, // progrd - z
+    20, // step for seeking
+    list(), // existing BurnModels is empty
     {
       parameter mnv.
       local incContrib is abs(inc - mnv:orbit:inclination) * incFactor.
