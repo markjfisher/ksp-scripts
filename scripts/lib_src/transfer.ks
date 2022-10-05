@@ -9,7 +9,7 @@
     parameter wrp is 0, t_wrp is 30, n is nextnode, v is n:burnvector, stT is time:seconds + n:eta - mnv_time(v:mag)[0].
     lock steering to n:burnvector. if wrp warpto(stT - t_wrp). wait until time:seconds >= stT.
     local st is 0. local t is 0. lock throttle to t.
-    until vdot(n:burnvector, v) < 0 or (st and t <= 0.002) {
+    until vdot(n:burnvector, v) < 0 or (st and t <= 0.001) {
       set st to 1. if maxthrust < 0.1 {
         stage. wait 0.1.
         if maxthrust < 0.1 { for part in ship:parts { for r in part:resources set r:enabled to true. } wait 0.1. }
@@ -136,24 +136,26 @@
     // decide if this is a decreasing transfer or increasing.
     // if decreasing: at apo decrease peri, then at peri decrease apo.
     // if increasing: at peri increase apo, then at apo increace peri.
-    local t1 is choose (time:seconds + eta:apoapsis) if a < orbit:apoapsis else (time:seconds + eta:periapsis).
-    local t2 is choose (time:seconds + eta:periapsis) if a < orbit:apoapsis else (time:seconds + eta:apoapsis).
-    lock h1 to choose mnv:orbit:periapsis if a < orbit:apoapsis else mnv:orbit:apoapsis.
-    lock h2 to choose mnv:orbit:apoapsis if a < orbit:apoapsis else mnv:orbit:periapsis.
+    // we will simply circularize at appropriate point for 2nd transfer
+    local is_dec is a < orbit:apoapsis.
 
     // first transfer
-    seek(f(t1), f(0), f(0), 0, 20, list(), { parameter mnv. return -abs(h1 - a). }).
+    seek(f(choose (time:seconds + eta:apoapsis) if is_dec else (time:seconds + eta:periapsis)), f(0), f(0), 0, 20, list(), {
+      parameter mnv.
+      local h is choose mnv:orbit:periapsis if is_dec else mnv:orbit:apoapsis.
+      return -abs(h - a).
+    }).
     exec(true, t_wrp).
+    circ(t_wrp, is_dec).
 
-    // second transfer
-    seek(f(t2), f(0), f(0), 0, 20, list(), { parameter mnv. return -abs(h2 - a). }).
-    exec(true, t_wrp).
   }
 
   function circ {
     parameter t_wrp is 40, at_peri is true.
-    local t is choose (time:seconds + eta:periapsis) if at_peri else (time:seconds + eta:apoapsis).
-    seek(f(t), f(0), f(0), 0, 20, list(), { parameter mnv. return -mnv:orbit:eccentricity. }).
+    seek(f(choose (time:seconds + eta:periapsis) if at_peri else (time:seconds + eta:apoapsis)), f(0), f(0), 0, 20, list(), {
+      parameter mnv.
+      return -mnv:orbit:eccentricity.
+    }).
     exec(true, t_wrp).
   }
 

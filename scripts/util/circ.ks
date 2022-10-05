@@ -5,9 +5,11 @@ local fr is tr:freeze.
 
 local f is {
   parameter b, at_peri.
-  if body <> b and eta:transition > 60 { warpto(time:seconds + eta:transition). }
+  if orbit:eccentricity < 0.0001 return 0.
+  local should_wait is false.
+  if body <> b and eta:transition > 60 { warpto(time:seconds + eta:transition). set should_wait to true. }
   wait until body = b.
-  wait 5.
+  if should_wait wait 5.
   tr:circ(20, at_peri).
 }.
 
