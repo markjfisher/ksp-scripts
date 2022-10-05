@@ -20,10 +20,8 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
-    local bm is addons:astrogator:calculateBurns(Mun).
-    local t is bm[0]:atTime.
-    local dv is bm[0]:totalDV.
-    tr:seek_SOI(Mun, TGT_MUNALT, t, dv, 20).
+    local bms is addons:astrogator:calculateBurns(Mun).
+    tr:seek_SOI(Mun, TGT_MUNALT, bms[0]:atTime, 0, 20, bms).
     tr:exec(true, 20).
     next().
   }).
@@ -101,8 +99,8 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
-    local bm is addons:astrogator:calculateBurns(Kerbin).
-    tr:seek_SOI(Kerbin, TGT_RETALT, bm[0]:atTime, bm[0]:totalDV, 20).
+    local bms is addons:astrogator:calculateBurns(Kerbin).
+    tr:seek_SOI(Kerbin, TGT_RETALT, bms[0]:atTime, 0, 20, bms).
     tr:exec(true, 20).
     next().
   }).

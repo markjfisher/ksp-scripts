@@ -20,15 +20,16 @@ local m is mission({ parameter seq, ev, next.
 
   seq:add({
     parameter b, a, p, s.
-    local bm is addons:astrogator:calculateBurns(b).
-    tr:seek_SOI(b, a, bm[0]:atTime, bm[0]:totalDV, 100, {
+    local bms is addons:astrogator:calculateBurns(b).
+    tr:seek_SOI(b, a, 0, 0, 20, bms, {
       parameter mnv.
-      local seq_adj is choose 0 if (mnv:orbit:hasnextpatch and mnv:orbit:nextpatch:body = b) else -INF.
-      print "local adjust: " + seq_adj.
-      return seq_adj.
+      return choose 0 if (mnv:orbit:hasnextpatch and mnv:orbit:nextpatch:body = b) else -INF.
     }).
-    if not hasnode or not (nextnode:orbit:hasnextpatch and mnv:orbit:nextpatch:body = b) {
-      print "Failed to get SOI to: " + b.
+
+    // safety check, but this may not be needed. keep until tested very far planets
+    local an is allnodes.
+    if not hasnode or not (an[an:length - 1]:orbit:hasnextpatch and an[an:length - 1]:orbit:nextpatch:body = b) {
+      dbg:out("Failed to get SOI to: " + b).
       print 1/0.
     }
 
@@ -46,11 +47,21 @@ local m is mission({ parameter seq, ev, next.
     parameter b, a, p, s.
     if body = b {
       wait 20.
-      tr:seek(fr(time:seconds + 120), fr(0), fr(0), 0, { parameter mnv. return -abs(mnv:orbit:periapsis - a). }).
+      tr:seek(fr(time:seconds + 120), fr(0), fr(0), 0, 5, list(), {
+        parameter mnv.
+        if a:typename = "List" {
+          local pe is mnv:orbit:periapsis.
+          // Fine if we're inside boundary
+          if pe >= a[0] and pe <= a[1] return 0.
+          // else we want to get to the closest of the 2 boundaries from where we are
+          set a to choose a[0] if pe < a[0] else a[1].
+        }
+        return -abs(mnv:orbit:periapsis - a).
+      }).
       tr:exec(true, 30).
       next().
     }
-    wait 0.1.
+    wait 0.2.
   }).
 
   seq:add({
@@ -80,6 +91,7 @@ local m is mission({ parameter seq, ev, next.
       wait 2.
       next().
     } else {
+      // jump to next seq when first person gets out
       if ship:crew():length = (p - 1) next().
     }
     wait 0.2.
@@ -91,6 +103,7 @@ local m is mission({ parameter seq, ev, next.
       wait 2.
       next().
     } else {
+      // take off when we have full crew back
       if ship:crew():length = p next().
     }
     wait 0.2.
@@ -98,7 +111,8 @@ local m is mission({ parameter seq, ev, next.
 
   seq:add({
     parameter b, a, p, s.
-    print "taking off from " + b.
+
+    // get into orbit
     lock steering to heading(90, 90).
     lock throttle to 1.
     wait 2.
@@ -106,20 +120,14 @@ local m is mission({ parameter seq, ev, next.
     wait until apoapsis > a.
     lock throttle to 0.
     gear off.
-    next().
-  }).
 
-  seq:add({
-    parameter b, a, p, s.
+    // circularize
     tr:seek(fr(time:seconds + eta:apoapsis), fr(0), fr(0), 0, { parameter mnv. return -mnv:orbit:eccentricity. }).
     tr:exec(true, 20).
-    next().
-  }).
 
-  seq:add({
-    parameter b, a, p, s.
-    local bm is addons:astrogator:calculateBurns(Kerbin).
-    tr:seek_SOI(Kerbin, a, bm[0]:atTime, bm[0]:totalDV, 20).
+    // run transfer to Kerbin
+    local bms is addons:astrogator:calculateBurns(Kerbin).
+    tr:seek_SOI(Kerbin, a, bms[0]:atTime, 0, 20, bms).
     tr:exec(true, 20).
     next().
   }).
@@ -162,7 +170,7 @@ local m is mission({ parameter seq, ev, next.
       wait until ship:maxthrust < 1.
       lock throttle to 0. stage. wait 1. lock steering to srfretrograde.
       next().
-    }
+    } else wait 0.5.
   }).
 
   seq:add({

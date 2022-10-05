@@ -18,18 +18,17 @@ local m is mission({ parameter seq, ev, next.
 
   seq:add({
     parameter pro.
-    local bm is addons:astrogator:calculateBurns(Mun).
-    local t is bm[0]:atTime.
-    local dv is bm[0]:totalDV * 1.01. // add 1% to the dv as a start to give it the boost to start closer to retro
-    tr:seek_SOI(Mun, TGT_MUNALT, t, dv, 20, {
+    local bms is addons:astrogator:calculateBurns(Mun).
+    tr:seek_SOI(Mun, TGT_MUNALT, bms[0]:atTime, 0, 20, bms, {
       parameter mnv.
       // prograde: get an inclination under 90
       // retrograde: get an inclination over 90.
       if mnv:orbit:hasnextpatch {
+        local i is abs(mnv:orbit:nextpatch:inclination).
         if pro {
-          return choose 0 if abs(mnv:orbit:nextpatch:inclination) < 90 else -INF.
+          return choose 0 if i < 90 else -INF.
         } else {
-          return choose 0 if abs(mnv:orbit:nextpatch:inclination) > 90 else -INF.
+          return choose 0 if i > 90 else -INF.
         }
       }
       // no patch means it hasn't reached target

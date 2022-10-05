@@ -19,8 +19,10 @@
     lock throttle to 0. unlock steering. remove nextnode. wait 0.
   }
 
+  function noFit { parameter mnv. return 0. }
+
   function seek {
-    parameter t, r, n, p, fitFn, stp is 50, d is list(t, r, n, p), fit is orbFit(fitFn@).
+    parameter t, r, n, p, stp is 50, bms is list(), fitFn is noFit@, d is list(t, r, n, p, bms), fit is orbFit(fitFn@).
     local steps is list(100, 50, 20, 5, 0.5, 0.05). local sI is steps:iterator.
     until not sI:next {
       if sI:value <= stp set d to optmz(d, fit, sI:value).
@@ -28,24 +30,40 @@
     fit(d). wait 0. return d.
   }
 
-  function emptyCond { parameter mnv. return 0. }
 
   function seek_SOI {
-    parameter tBody, tPeri, t is time:seconds + 400, p is 200, stp is 50, condFn is emptyCond@.
-    local d is seek(t, 0, 0, p, {
+    parameter tBody, tPeri, t is time:seconds + 400, p is 200, stp is 50, bms is list(), xFit is noFit@.
+    until not hasnode { remove nextnode. wait 0. }
+    local u is 0.
+    for bm in bms {
+      // TODO, do we filter out already zero time burn models?
+      if bm:atTime > 0 {
+        add node(bm:atTime, bm:radial, bm:normal, bm:prograde).
+        set u to bm:atTime.
+      }
+    }
+    // take the latest of all the burn nodes + 60s as the starting time for a mnv node as it has to be after them.
+    if u > 0 { set t to u + 60. set u to u + 60. }
+    local d is seek(t, 0, 0, p, stp, bms, {
       parameter mnv.
-      local cfv is condFn(mnv).
-      local tfs is tfTo(mnv:orbit, tBody).
-      if tfs return 1.
+      if mnv:time < u return -INF.
+      if tfTo(mnv:orbit, tBody) return 1.
       local per is choose mnv:orbit:eta:transition if mnv:orbit:eta:apoapsis > INF else mnv:orbit:period.
-      local x is -closestApp(tBody, time:seconds + mnv:eta, time:seconds + mnv:eta + per) + cfv.
-      return x.
-    }, stp).
-    return seek(d[0], d[1], d[2], d[3], {
+      return -closestApp(tBody, time:seconds + mnv:eta, time:seconds + mnv:eta + per) + xFit(mnv).
+    }).
+    return seek(d[0], d[1], d[2], d[3], stp, bms, {
       parameter mnv.
+      if mnv:time < u return -INF.
       if not tfTo(mnv:orbit, tBody) return -INF.
-      return -abs(mnv:orbit:nextpatch:periapsis - tPeri) + condFn(mnv).
-    }, stp).
+      local pe is mnv:orbit:nextpatch:periapsis.
+      local c is xFit(mnv).
+      if tPeri:typename = "List" {
+        // everything inside the list boundaries is good, otherwise return difference to the middle of the boundaries
+        if pe <= tPeri[1] and pe >= tPeri[0] return c. else return -abs(pe - (tPeri[1] - tPeri[0])/2) + c.
+      }
+      // otherwise, just take diff from the peri specified
+      return -abs(mnv:orbit:nextpatch:periapsis - tPeri) + c.
+    }).
   }
 
   function tfTo { parameter tOrb, tBody. return (tOrb:hasnextpatch and tOrb:nextpatch:body = tBody). }
@@ -70,7 +88,14 @@
   function orbFit {
     parameter fitFn.
     return {
-      parameter d. until not hasnode { remove nextnode. wait 0. }
+      parameter d.
+      // first count the valid burn nodes
+      local vb is 0. for bm in d[4] { if bm:atTime > 0 set vb to vb + 1. }
+
+      // delete nodes at the vb index and after (but from the end)
+      from { local x is allnodes:length - 1. } until x < vb step { set x to x-1. } do { remove allnodes[x]. }
+
+      // now add our new test node to the end and fit it.
       local new_node is node(unfr(d[0]), unfr(d[1]), unfr(d[2]), unfr(d[3])). add new_node. wait 0.
       return fitFn(new_node).
     }.
@@ -89,7 +114,19 @@
 
   function ngbrs {
     parameter dt, sz, rs is list().
-    for j in range(0, dt:length) if not fr(dt[j]) { local i is dt:copy. local d is dt:copy. set i[j] to i[j] + sz. set d[j] to d[j] - sz. rs:add(i). rs:add(d).}
+    for j in range(0, dt:length) {
+      if not fr(dt[j]) {
+        local i is dt:copy.
+        local d is dt:copy.
+        if i[j]:typename = "Scalar" {
+          set i[j] to i[j] + sz.
+          set d[j] to d[j] - sz.
+        }.
+        rs:add(i).
+        rs:add(d).
+      }
+    }
+
     return rs.
   }
 
