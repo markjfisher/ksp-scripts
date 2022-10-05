@@ -9,7 +9,7 @@ local f is {
   if body <> b and eta:transition > 60 { warpto(time:seconds + eta:transition). set should_wait to true. }
   wait until body = b.
   if should_wait wait 5.
-  if orbit:eccentricity >= 1 tr:circ(20).
+  if orbit:eccentricity >= 1 tr:circ_per(20).
   tr:hohmann(alt, t_wrp).
 }.
 

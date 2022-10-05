@@ -10,7 +10,7 @@ local f is {
   if body <> b and eta:transition > 60 { warpto(time:seconds + eta:transition). set should_wait to true. }
   wait until body = b.
   if should_wait wait 5.
-  tr:circ(20, at_peri).
+  if at_peri tr:circ_per(20). else tr:circ_apo(20).
 }.
 
 parameter b, at_peri is true.

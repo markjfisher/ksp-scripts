@@ -15,7 +15,7 @@ local m is mission({ parameter seq, ev, next.
 
   seq:add({
     // circ at apo as we just took off
-    tr:circ(90, false).
+    tr:circ_apo(90).
     next().
   }).
 
@@ -43,7 +43,7 @@ local m is mission({ parameter seq, ev, next.
 
   seq:add({
     rcs on.
-    tr:circ(90).
+    tr:circ_per(90).
     rcs off.
     next().
   }).

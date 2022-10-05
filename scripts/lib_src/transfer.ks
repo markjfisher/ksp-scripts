@@ -1,6 +1,6 @@
 {
   local INF is 2^64.
-  local tf is lex("exec", exec@, "freeze", f@, "seek_SOI", seek_SOI@, "seek", seek@, "hohmann", hohmann@, "circ", circ@).
+  local tf is lex("exec", exec@, "freeze", f@, "seek_SOI", seek_SOI@, "seek", seek@, "hohmann", hohmann@, "circ_apo", c_apo@, "circ_per", c_per@).
   local dvlib is improot("lib/deltav").
 
   function exec { parameter wrp is 0, t_wrp is 30. until not hasnode {e(wrp, t_wrp).}}
@@ -150,8 +150,18 @@
 
   }
 
+  function c_apo {
+    parameter t_wrp is 40.
+    circ(t_wrp, false).
+  }
+
+  function c_per {
+    parameter t_wrp is 40.
+    circ(t_wrp, true).
+  }
+
   function circ {
-    parameter t_wrp is 40, at_peri is true.
+    parameter t_wrp, at_peri.
     seek(f(choose (time:seconds + eta:periapsis) if at_peri else (time:seconds + eta:apoapsis)), f(0), f(0), 0, 20, list(), {
       parameter mnv.
       return -mnv:orbit:eccentricity.

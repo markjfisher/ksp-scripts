@@ -34,7 +34,7 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
-    tr:circ().
+    tr:circ_per().
     next().
   }).
 

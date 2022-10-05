@@ -73,7 +73,7 @@ local m is mission({ parameter seq, ev, next.
   // circ and reduce to target altitude
   seq:add({
     parameter b, a, s.
-    tr:circ(30).
+    tr:circ_per(30).
 
     local ta is choose a[0] if a:typename = "List" else a.
     tr:hohmann(ta).
@@ -131,7 +131,7 @@ local m is mission({ parameter seq, ev, next.
     gear off.
 
     // circularize at apo as we just took off
-    tr:circ(20, false).
+    tr:circ_apo(20).
 
     // run transfer to Kerbin - generic height, we will adjust to true target later
     local bms is addons:astrogator:calculateBurns(Kerbin).
