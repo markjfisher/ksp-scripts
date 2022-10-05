@@ -1,54 +1,17 @@
 local tr is import("lib/transfer").
 local mission is import("lib/mission").
-local launch is improot("launch").
 
-local TGT_ALT is 83000.
-local TGT_MUNALT is 300000.
 local TGT_RETALT is 35000.
 local RENT_BURNALT is 100000.
 local fr is tr:freeze.
 local warping is false.
 
+// A mission to return to Kerbin from anywhere.
 local m is mission({ parameter seq, ev, next.
-  // Launch
-  seq:add({
-    if ship:status = "prelaunch" launch:exec(0, TGT_ALT / 1000, false).
-    next().
-  }).
-
-  // Seek Mun
-  seq:add({
-    local bms is addons:astrogator:calculateBurns(Mun).
-    tr:seek_SOI(Mun, TGT_MUNALT, bms[0]:atTime, 0, 20, bms).
-    tr:exec(true, 20).
-    next().
-  }).
-
-  // Wait to enter SOI
-  seq:add({
-    if body <> Mun and eta:transition > 60 { warpto(time:seconds + eta:transition). }
-    if body = Mun next(). else wait 0.2.
-  }).
-
-  seq:add({
-    if body = Mun {
-      wait 20.
-      tr:seek(fr(time:seconds + 120), fr(0), fr(0), 0, 20, list(), { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_MUNALT). }).
-      tr:exec(true).
-      next().
-    }
-    wait 0.2.
-  }).
-
-  seq:add({
-    tr:circ_per(20).
-    next().
-  }).
-
   seq:add({
     local bms is addons:astrogator:calculateBurns(Kerbin).
     tr:seek_SOI(Kerbin, TGT_RETALT, bms[0]:atTime, 0, 20, bms).
-    tr:exec(true, 20).
+    tr:exec(true, 40).
     next().
   }).
 
@@ -63,7 +26,7 @@ local m is mission({ parameter seq, ev, next.
     if body = Kerbin {
       wait 10.
       tr:seek(fr(time:seconds + 120), fr(0), fr(0), 0, 20, list(), { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_RETALT). }).
-      tr:exec(true, 20).
+      tr:exec(true, 40).
       next().
     } else {
       wait 0.5.
@@ -75,7 +38,7 @@ local m is mission({ parameter seq, ev, next.
       set warp to 0. wait 1. next().
     } else {
       if not warping { set warping to true. set warp to 5. }
-      wait 0.2.
+      wait 0.1.
     }
   }).
 
@@ -86,10 +49,17 @@ local m is mission({ parameter seq, ev, next.
       wait until ship:maxthrust < 1.
       lock throttle to 0. stage. wait 1. lock steering to srfretrograde.
       next().
-    }
+    } else wait 0.5.
   }).
 
-  seq:add({ if (ship:status = "Landed" or ship:status = "Splashed") next(). else wait 0.5. }).
+  seq:add({
+    if (ship:status = "Landed" or ship:status = "Splashed") {
+      print "Kerbin return complete.".
+      next().
+    } else {
+      wait 0.5.
+    }
+  }).
 
 }).
 

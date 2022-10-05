@@ -4,6 +4,8 @@ local mission is import("lib/mission").
 // and then does action group 9. Put parachutes etc on this, and other stuff to do.
 // Could also burn the last fuel off?
 
+// WIP - haven't tested this yet. Not sure it will work anyway as CPU only runs on current vessel?
+
 // AG9 is parachute action group.
 
 local ORBIT_HEIGHT_CHECK is 50000.

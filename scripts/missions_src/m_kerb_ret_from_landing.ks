@@ -1,21 +1,41 @@
-local mission is import("lib/mission").
 local tr is import("lib/transfer").
+local mission is import("lib/mission").
+local descent is import("lib/descent").
 
 local TGT_RETALT is 35000.
 local RENT_BURNALT is 100000.
+
 local fr is tr:freeze.
 local warping is false.
 
-// A mission to return to Kerbin from anywhere.
+// Parameters to blocks:
+// a = target altitude around body to achieve and circ before transfer to kerbin
+
 local m is mission({ parameter seq, ev, next.
   seq:add({
+    parameter a.
+
+    // get into orbit
+    lock steering to heading(90, 90).
+    lock throttle to 1.
+    wait 2.
+    lock steering to heading(90, 45).
+    wait until apoapsis > a.
+    lock throttle to 0.
+    gear off.
+
+    // circularize at apo as we just took off
+    tr:circ_apo(20).
+
+    // run transfer to Kerbin - generic height, we will adjust to true target later
     local bms is addons:astrogator:calculateBurns(Kerbin).
-    tr:seek_SOI(Kerbin, TGT_RETALT, bms[0]:atTime, 0, 20, bms).
-    tr:exec(true, 40).
+    tr:seek_SOI(Kerbin, a, bms[0]:atTime, 0, 20, bms).
+    tr:exec(true, 20).
     next().
   }).
 
   seq:add({
+    parameter a.
     local transition_time is time:seconds + eta:transition.
     warpto(transition_time).
     wait until time:seconds >= transition_time.
@@ -23,10 +43,11 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
+    parameter a.
     if body = Kerbin {
       wait 10.
       tr:seek(fr(time:seconds + 120), fr(0), fr(0), 0, 20, list(), { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_RETALT). }).
-      tr:exec(true, 40).
+      tr:exec(true, 20).
       next().
     } else {
       wait 0.5.
@@ -34,33 +55,29 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
+    parameter a.
     if ship:altitude < RENT_BURNALT * 10 {
       set warp to 0. wait 1. next().
     } else {
-      if not warping { set warping to true. set warp to 5. } wait 0.1.
+      if not warping { set warping to true. set warp to 5. }
+      wait 0.1.
     }
   }).
 
   seq:add({
+    parameter a.
     if ship:altitude < RENT_BURNALT {
       ag10 off.
       lock steering to retrograde. wait 5. lock throttle to 1.
-      // burn some off to slow us down, but cater for way too much DV left in the tanks
       wait until ship:maxthrust < 1.
       lock throttle to 0. stage. wait 1. lock steering to srfretrograde.
       next().
-    } else {
-      wait 0.5.
-    }
+    } else wait 0.5.
   }).
 
   seq:add({
-    if (ship:status = "Landed" or ship:status = "Splashed") {
-      print "Kerbin return complete.".
-      next().
-    } else {
-      wait 0.5.
-    }
+    parameter a.
+    if (ship:status = "Landed" or ship:status = "Splashed") next(). else wait 0.5.
   }).
 
 }).
