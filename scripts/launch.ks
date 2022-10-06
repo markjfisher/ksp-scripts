@@ -12,11 +12,9 @@
   // AG5  Fairings
   // AG10 Autodeploy for anything custom (done at deployAlt height)
 
-  local l_version is "v1.0.2".
+  local l_version is "v1.0.3".
 
-  local transfer is improot("lib/transfer").
-  local orbit is improot("lib/orbit").
-  local freeze is transfer:freeze.
+  local tr is improot("lib/transfer").
 
   local launch is lex("exec", exec@).
 
@@ -280,8 +278,7 @@
   }
 
   function circularize {
-    orbit:circ_node().
-    transfer:exec(true).
+    tr:circ_apo(60).
     lock throttle to 0.
     lockToPrograde().
   }

@@ -10,7 +10,7 @@ local f1 is {
   parameter o1, o2, oP, t.
 
   // target's vector component in parent body's plane
-  local pN is orbit:norm(oP).
+  local pN is orbit:n(oP).
   local bP is oP:position.
   local v1Full is positionAt(o1, t) - bP.
   local v2Full is positionAt(o2, t) - bP.

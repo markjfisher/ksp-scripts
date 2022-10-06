@@ -5,7 +5,7 @@ local TGT_ALT is 82000.
 
 local m is mission({ parameter seq, ev, next.
   seq:add({
-    launch:exec(0, TGT_ALT / 1000, false).
+    if ship:status = "prelaunch" launch:exec(0, TGT_ALT / 1000, false).
     next().
   }).
 

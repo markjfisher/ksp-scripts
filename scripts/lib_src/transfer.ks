@@ -23,7 +23,7 @@
 
   function seek {
     parameter t, r, n, p, stp is 50, bms is list(), fitFn is noFit@, d is list(t, r, n, p, bms), fit is orbFit(fitFn@).
-    local steps is list(100, 50, 20, 5, 0.5, 0.05). local sI is steps:iterator.
+    local steps is list(100, 50, 20, 5, 2, 0.5, 0.05). local sI is steps:iterator.
     until not sI:next {
       if sI:value <= stp set d to optmz(d, fit, sI:value).
     }
@@ -140,7 +140,7 @@
     local is_dec is a < orbit:apoapsis.
 
     // first transfer
-    seek(f(choose (time:seconds + eta:apoapsis) if is_dec else (time:seconds + eta:periapsis)), f(0), f(0), 0, 20, list(), {
+    seek(f(choose (time:seconds + eta:apoapsis) if is_dec else (time:seconds + eta:periapsis)), f(0), f(0), 0, 5, list(), {
       parameter mnv.
       local h is choose mnv:orbit:periapsis if is_dec else mnv:orbit:apoapsis.
       return -abs(h - a).
@@ -162,7 +162,7 @@
 
   function circ {
     parameter t_wrp, at_peri.
-    seek(f(choose (time:seconds + eta:periapsis) if at_peri else (time:seconds + eta:apoapsis)), f(0), f(0), 0, 20, list(), {
+    seek(f(choose (time:seconds + eta:periapsis) if at_peri else (time:seconds + eta:apoapsis)), f(0), f(0), 0, 5, list(), {
       parameter mnv.
       return -mnv:orbit:eccentricity.
     }).
