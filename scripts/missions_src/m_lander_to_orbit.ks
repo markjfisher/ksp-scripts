@@ -25,7 +25,7 @@ local m is mission({ parameter seq, ev, next.
     gear off.
 
     // circularize at apo as we just took off
-    tr:circ_apo(20).
+    tr:circ_apo(50, 20).
     next().
   }).
 

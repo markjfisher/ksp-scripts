@@ -44,7 +44,7 @@ local m is mission({ parameter seq, ev, next.
     wait 2.
     stage.
     wait 2.
-    tr:circ_apo(120).
+    tr:circ_apo(50, 120).
     next().
   }).
 
@@ -96,7 +96,7 @@ local m is mission({ parameter seq, ev, next.
 
   seq:add({
     parameter b, a, pro.
-    tr:circ_per().
+    tr:circ_per(5, 40).
     next().
   }).
 

@@ -278,7 +278,7 @@
   }
 
   function circularize {
-    tr:circ_apo(60).
+    tr:circ_apo(50, 60).
     lock throttle to 0.
     lockToPrograde().
   }

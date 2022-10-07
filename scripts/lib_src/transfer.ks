@@ -131,7 +131,7 @@
   }
 
   function hohmann {
-    parameter a, t_wrp is 40.
+    parameter a, t_wrp is 40, stp is 5.
 
     // decide if this is a decreasing transfer or increasing.
     // if decreasing: at apo decrease peri, then at peri decrease apo.
@@ -140,29 +140,29 @@
     local is_dec is a < orbit:apoapsis.
 
     // first transfer
-    seek(f(choose (time:seconds + eta:apoapsis) if is_dec else (time:seconds + eta:periapsis)), f(0), f(0), 0, 5, list(), {
+    seek(f(choose (time:seconds + eta:apoapsis) if is_dec else (time:seconds + eta:periapsis)), f(0), f(0), 0, stp, list(), {
       parameter mnv.
       local h is choose mnv:orbit:periapsis if is_dec else mnv:orbit:apoapsis.
       return -abs(h - a).
     }).
     exec(true, t_wrp).
-    circ(t_wrp, is_dec).
+    circ(stp, t_wrp, is_dec).
 
   }
 
   function c_apo {
-    parameter t_wrp is 40.
-    circ(t_wrp, false).
+    parameter stp is 5, t_wrp is 40.
+    circ(stp, t_wrp, false).
   }
 
   function c_per {
-    parameter t_wrp is 40.
-    circ(t_wrp, true).
+    parameter stp is 5, t_wrp is 40.
+    circ(stp, t_wrp, true).
   }
 
   function circ {
-    parameter t_wrp, at_peri.
-    seek(f(choose (time:seconds + eta:periapsis) if at_peri else (time:seconds + eta:apoapsis)), f(0), f(0), 0, 5, list(), {
+    parameter stp, t_wrp, at_peri.
+    seek(f(choose (time:seconds + eta:periapsis) if at_peri else (time:seconds + eta:apoapsis)), f(0), f(0), 0, stp, list(), {
       parameter mnv.
       return -mnv:orbit:eccentricity.
     }).

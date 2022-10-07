@@ -71,7 +71,7 @@ local m is mission({ parameter seq, ev, next.
   // circ and reduce to target altitude
   seq:add({
     parameter b, a.
-    tr:circ_per(30).
+    tr:circ_per(5, 40).
 
     local ta is choose a[0] if a:typename = "List" else a.
     tr:hohmann(ta).

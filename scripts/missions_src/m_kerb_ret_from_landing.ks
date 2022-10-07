@@ -25,11 +25,11 @@ local m is mission({ parameter seq, ev, next.
     gear off.
 
     // circularize at apo as we just took off
-    tr:circ_apo(20).
+    tr:circ_apo(50, 20).
 
     // run transfer to Kerbin - generic height, we will adjust to true target later
     local bms is addons:astrogator:calculateBurns(Kerbin).
-    tr:seek_SOI(Kerbin, a, bms[0]:atTime, 0, 20, bms).
+    tr:seek_SOI(Kerbin, a, bms[0]:atTime, 0, 2, bms).
     tr:exec(true, 20).
     next().
   }).
@@ -46,7 +46,7 @@ local m is mission({ parameter seq, ev, next.
     parameter a.
     if body = Kerbin {
       wait 10.
-      tr:seek(fr(time:seconds + 120), fr(0), fr(0), 0, 20, list(), { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_RETALT). }).
+      tr:seek(fr(time:seconds + 120), fr(0), fr(0), 0, 2, list(), { parameter mnv. return -abs(mnv:orbit:periapsis - TGT_RETALT). }).
       tr:exec(true, 20).
       next().
     } else {
