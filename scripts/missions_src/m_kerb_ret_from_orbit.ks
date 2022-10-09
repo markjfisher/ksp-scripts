@@ -47,7 +47,18 @@ local m is mission({ parameter seq, ev, next.
       ag10 off.
       lock steering to retrograde. wait 5. lock throttle to 1.
       wait until ship:maxthrust < 1.
-      lock throttle to 0. stage. wait 1. lock steering to srfretrograde.
+      lock throttle to 0.
+
+      local normalVec is vcrs(ship:velocity:orbit, -body:position).
+      local radialVec is vcrs(ship:velocity:orbit, normalVec).
+      lock steering to radialVec.
+      wait 5.
+
+      stage. wait 2.
+
+      lock steering to srfretrograde.
+      wait 5.
+
       next().
     } else wait 0.5.
   }).
