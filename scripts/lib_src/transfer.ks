@@ -25,8 +25,13 @@
     parameter t, r, n, p, stp is 50, bms is list(), fitFn is noFit@, d is list(t, r, n, p, bms), fit is orbFit(fitFn@).
     // current step will be decreased until under 0.05
     local cs is stp.
-    until cs < 0.05 {
-      set d to optmz(d, fit, cs).
+    local lastcs is cs.
+    until cs < 0.3 {
+      if lastcs <> cs {
+        print "changing to " + cs.
+        set lascs to cs.
+      }
+      set d to optmz(d, fit, cs + (random() - 0.5) / 5 * stp). // give up to 10% random around stp.
       set cs to cs / 3.75.
     }
     fit(d). wait 0. return d.
@@ -60,8 +65,11 @@
       local pe is mnv:orbit:nextpatch:periapsis.
       local c is xFit(mnv).
       if tPeri:typename = "List" {
-        // everything inside the list boundaries is good, otherwise return difference to the middle of the boundaries
-        if pe <= tPeri[1] and pe >= tPeri[0] return c. else return -abs(pe - (tPeri[1] - tPeri[0])/2) + c.
+        // everything inside the list boundaries is good, otherwise return difference to the closest boundary
+        if pe <= tPeri[1] and pe >= tPeri[0] return c. else {
+          if pe >= tPeri[1] return tPeri[1] - pe + c.
+          return pe - tPeri[0] + c.
+        }
       }
       // otherwise, just take diff from the peri specified
       return -abs(mnv:orbit:nextpatch:periapsis - tPeri) + c.

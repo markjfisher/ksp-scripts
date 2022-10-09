@@ -9,16 +9,20 @@ local warping is false.
 // A mission to return to Kerbin from anywhere.
 local m is mission({ parameter seq, ev, next.
   seq:add({
-    local bms is addons:astrogator:calculateBurns(Kerbin).
-    tr:seek_SOI(Kerbin, TGT_RETALT, bms[0]:atTime, 0, 2, bms).
-    tr:exec(true, 40).
+    if body <> Kerbin {
+      local bms is addons:astrogator:calculateBurns(Kerbin).
+      tr:seek_SOI(Kerbin, TGT_RETALT, bms[0]:atTime, 0, 2, bms).
+      tr:exec(true, 40).
+    }
     next().
   }).
 
   seq:add({
-    local transition_time is time:seconds + eta:transition.
-    warpto(transition_time).
-    wait until time:seconds >= transition_time.
+    if body <> Kerbin {
+      local transition_time is time:seconds + eta:transition.
+      warpto(transition_time).
+      wait until time:seconds >= transition_time.
+    }
     next().
   }).
 

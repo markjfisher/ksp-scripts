@@ -21,7 +21,7 @@ local m is mission({ parameter seq, ev, next.
   seq:add({
     parameter b, a, pro.
     local bms is addons:astrogator:calculateBurns(b).
-    tr:seek_SOI(b, a, 0, 0, 2, bms, {
+    tr:seek_SOI(b, a, 0, 0, 10, bms, {
       parameter mnv.
       if not (mnv:orbit:hasnextpatch and mnv:orbit:nextpatch:body = b) return -INF.
       // prograde: get an inclination under 90
