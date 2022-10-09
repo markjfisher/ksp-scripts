@@ -50,7 +50,7 @@ local m is mission({ parameter seq, ev, next.
       lock throttle to 0.
 
       local normalVec is vcrs(ship:velocity:orbit, -body:position).
-      local radialVec is vcrs(ship:velocity:orbit, normalVec).
+      local radialVec is vcrs(normalVec, ship:velocity:orbit).
       lock steering to radialVec.
       wait 5.
 

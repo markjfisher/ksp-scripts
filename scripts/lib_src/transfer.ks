@@ -23,9 +23,11 @@
 
   function seek {
     parameter t, r, n, p, stp is 50, bms is list(), fitFn is noFit@, d is list(t, r, n, p, bms), fit is orbFit(fitFn@).
-    local steps is list(100, 50, 20, 5, 2, 0.5, 0.05). local sI is steps:iterator.
-    until not sI:next {
-      if sI:value <= stp set d to optmz(d, fit, sI:value).
+    // current step will be decreased until under 0.05
+    local cs is stp.
+    until cs < 0.05 {
+      set d to optmz(d, fit, cs).
+      set cs to cs / 3.75.
     }
     fit(d). wait 0. return d.
   }

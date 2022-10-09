@@ -1,7 +1,5 @@
 {
-  local genetics is lex(
-          "seek", seek@
-          ).
+  local genetics is lex("seek", seek@).
 
   function seek {
     parameter config.

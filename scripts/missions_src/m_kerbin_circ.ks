@@ -1,15 +1,15 @@
 local mission is import("lib/mission").
 local launch is improot("launch").
 
-local TGT_ALT is 82000.
-
 local m is mission({ parameter seq, ev, next.
   seq:add({
-    if ship:status = "prelaunch" launch:exec(0, TGT_ALT / 1000, false).
+    parameter a.
+    if ship:status = "prelaunch" launch:exec(0, a / 1000, false).
     next().
   }).
 
   seq:add({
+    parameter a.
     print "kerbin orbit established.".
     next().
   }).

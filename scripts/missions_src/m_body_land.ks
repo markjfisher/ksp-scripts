@@ -74,7 +74,10 @@ local m is mission({ parameter seq, ev, next.
     tr:circ_per(5, 40).
 
     local ta is choose a[0] if a:typename = "List" else a.
-    tr:hohmann(ta).
+    // we may not need to do hohmann if we are already at target
+    local p_apo is abs(orbit:periapsis / ta - 1).
+    local p_per is abs(orbit:apoapsis / ta - 1).
+    if (p_apo > 0.01 or p_per > 0.01) tr:hohmann(ta, 40, 2).
     next().
   }).
 

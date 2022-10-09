@@ -29,7 +29,7 @@ local m is mission({ parameter seq, ev, next.
 
     // run transfer to Kerbin - generic height, we will adjust to true target later
     local bms is addons:astrogator:calculateBurns(Kerbin).
-    tr:seek_SOI(Kerbin, a, bms[0]:atTime, 0, 2, bms).
+    tr:seek_SOI(Kerbin, TGT_RETALT, bms[0]:atTime, 0, 2, bms).
     tr:exec(true, 20).
     next().
   }).
@@ -70,7 +70,18 @@ local m is mission({ parameter seq, ev, next.
       ag10 off.
       lock steering to retrograde. wait 5. lock throttle to 1.
       wait until ship:maxthrust < 1.
-      lock throttle to 0. stage. wait 1. lock steering to srfretrograde.
+      lock throttle to 0.
+
+      local normalVec is vcrs(ship:velocity:orbit, -body:position).
+      local radialVec is vcrs(normalVec, ship:velocity:orbit).
+      lock steering to radialVec.
+      wait 5.
+
+      stage. wait 2.
+
+      lock steering to srfretrograde.
+      wait 5.
+
       next().
     } else wait 0.5.
   }).
