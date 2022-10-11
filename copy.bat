@@ -4,6 +4,11 @@ set KSP_FOLDER="C:\Steam\steamapps\common\Kerbal Space Program\Ships\Script"
 
 echo "Deleting old scripts"
 del /s /q %KSP_FOLDER%\*
+rmdir /s /q %KSP_FOLDER%
+mkdir %KSP_FOLDER%
+
+if not exist scripts\lib      mkdir scripts\lib
+if not exist scripts\missions mkdir scripts\missions
 
 echo "minifying src"
 del /s /q scripts\lib\*

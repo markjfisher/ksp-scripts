@@ -8,5 +8,5 @@ dist
 *.iws
 .idea
 
-#scripts/lib/*.ks
-#scripts/missions/*.ks
+scripts/lib/*.ks
+scripts/missions/*.ks
