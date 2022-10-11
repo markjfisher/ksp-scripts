@@ -8,33 +8,22 @@ local RENT_BURNALT is 100000.
 
 local m is mission({ parameter seq, ev, next.
   seq:add({
-    if ship:altitude < RENT_BURNALT {
-      ag10 off.
-      lock steering to retrograde. wait 5. lock throttle to 1.
-      wait until ship:maxthrust < 1.
-      lock throttle to 0.
-
-      local normalVec is vcrs(ship:velocity:orbit, -body:position).
-      local radialVec is vcrs(normalVec, ship:velocity:orbit).
-      lock steering to radialVec.
-      wait 5.
-
-      stage. wait 2.
-
-      lock steering to srfretrograde.
-      wait 5.
-
-      next().
-    } else wait 0.5.
-  }).
-
-  seq:add({
-    if (ship:status = "Landed" or ship:status = "Splashed") {
-      print "Kerbin return complete.".
-      next().
-    } else {
-      wait 0.5.
-    }
+    parameter b, a, pro.
+    local bms is addons:astrogator:calculateBurns(b).
+    tr:seek_SOI(b, a, 0, 0, 10, bms, {
+      parameter mnv.
+      if not (mnv:orbit:hasnextpatch and mnv:orbit:nextpatch:body = b) return -INF.
+    // prograde: get an inclination under 90
+    // retrograde: get an inclination over 90.
+      local i is abs(mnv:orbit:nextpatch:inclination).
+      if pro {
+        return choose 0 if i < 90 else -INF.
+      } else {
+        return choose 0 if i > 90 else -INF.
+      }
+    }).
+    tr:exec(true, 40).
+    next().
   }).
 }).
 

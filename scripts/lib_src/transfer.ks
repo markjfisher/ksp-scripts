@@ -6,32 +6,45 @@
   function exec { parameter wrp is 0, t_wrp is 30. until not hasnode {e(wrp, t_wrp).}}
 
   function e {
-    parameter wrp is 0, t_wrp is 30, n is nextnode, v is n:burnvector, stT is time:seconds + n:eta - mnv_time(v:mag)[0].
-    lock steering to n:burnvector. if wrp warpto(stT - t_wrp). wait until time:seconds >= stT.
+    parameter wrp is 0, t_wrp is 30, n is nextnode, v is n:deltav, stT is time:seconds + n:eta - mnv_time(v:mag)[0].
+
+    // check if it's worth doing this node at all
+    if n:deltav:mag < 0.001 {
+      print "skipping node, as it has no magnitude".
+      remove nextnode.
+      wait 0.
+      return.
+    }
+
+    lock steering to n:deltav.
+    if wrp warpto(stT - t_wrp).
+    wait until time:seconds >= stT.
+
+    // st = flag for started
     local st is 0. local t is 0. lock throttle to t.
-    until vdot(n:burnvector, v) < 0 or (st and t <= 0.001) {
+    until vdot(n:deltav, v) < 0 or (st and t <= 0.006) {
       set st to 1. if maxthrust < 0.1 {
         stage. wait 0.1.
         if maxthrust < 0.1 { for part in ship:parts { for r in part:resources set r:enabled to true. } wait 0.1. }
       }
-      set t to min(mnv_time(n:burnvector:mag)[0], 1). wait 0.1.
+      // add a small adjustment so we finish slightly quicker at the end rather than creeping down on 0 time
+      set t to min(mnv_time(n:deltav:mag)[0] + 0.005, 1). wait 0.1.
     }
-    lock throttle to 0. unlock steering. remove nextnode. wait 0.
+    lock throttle to 0.
+    unlock steering.
+    remove nextnode.
+    wait 0.
   }
 
+  // A dummy function that returns 0 change for the maneuver.
   function noFit { parameter mnv. return 0. }
 
   function seek {
-    parameter t, r, n, p, stp is 50, bms is list(), fitFn is noFit@, d is list(t, r, n, p, bms), fit is orbFit(fitFn@).
-    // current step will be decreased until under 0.05
+    parameter t, r, n, p, stp is 30, bms is list(), fitFn is noFit@, d is list(t, r, n, p, bms), fit is orbFit(fitFn@).
+    // current step will be decreased until under some limit
     local cs is stp.
-    local lastcs is cs.
-    until cs < 0.3 {
-      if lastcs <> cs {
-        print "changing to " + cs.
-        set lascs to cs.
-      }
-      set d to optmz(d, fit, cs + (random() - 0.5) / 5 * stp). // give up to 10% random around stp.
+    until cs < 0.042 {
+      set d to optmz(d, fit, cs).
       set cs to cs / 3.75.
     }
     fit(d). wait 0. return d.
@@ -39,7 +52,7 @@
 
 
   function seek_SOI {
-    parameter tBody, tPeri, t is time:seconds + 400, p is 200, stp is 50, bms is list(), xFit is noFit@.
+    parameter tBody, tPeri, t is time:seconds + 400, p is 200, stp is 30, bms is list(), xFit is noFit@.
     until not hasnode { remove nextnode. wait 0. }
     local u is 0.
     for bm in bms {
@@ -47,10 +60,10 @@
       if bm:atTime > 0 {
         add node(bm:atTime, bm:radial, bm:normal, bm:prograde).
         set u to bm:atTime.
-      }
+      } else print "got a time 0 burnModel in " + bm.
     }
     // take the latest of all the burn nodes + 60s as the starting time for a mnv node as it has to be after them.
-    if u > 0 { set t to u + 60. set u to u + 60. }
+    if u > 0 { set t to u + 60. set u to t. }
     local d is seek(t, 0, 0, p, stp, bms, {
       parameter mnv.
       if mnv:time < u return -INF.
@@ -106,19 +119,35 @@
       from { local x is allnodes:length - 1. } until x < vb step { set x to x-1. } do { remove allnodes[x]. }
 
       // now add our new test node to the end and fit it.
-      local new_node is node(unfr(d[0]), unfr(d[1]), unfr(d[2]), unfr(d[3])). add new_node. wait 0.
+      local new_node is node(unf(d[0]), unf(d[1]), unf(d[2]), unf(d[3])). add new_node. wait 0.
       return fitFn(new_node).
     }.
   }
 
   function optmz {
     parameter d, fitFn, sz, wng is list(fitFn(d), d), imp is best_nbr(wng, fitFn, sz).
-    until imp[0] <= wng[0] { set wng to imp. set imp to best_nbr(wng, fitFn, sz). }
+    // step count to check if we have gone too many loops with almost no improvement
+    local sc is 0.
+    // score diff, to catch drilling too close onto improvement
+    local sd is 0.
+    // quit looking is flag set if we've iterate too long
+    local ql is 0.
+    until (imp[0] <= wng[0]) or ql {
+      set wng to imp.
+      set imp to best_nbr(wng, fitFn, sz).
+      set sc to sc + 1.
+      set sd to abs(imp[0] - wng[0]).
+      set ql to sc > 40 and sd < 0.0001.
+    }
     return wng[1].
   }
 
   function best_nbr {
-    parameter best, fitFn, sz. for n in ngbrs(best[1], sz) { local sc is fitFn(n). if sc > best[0] set best to list(sc, n). }
+    parameter best, fitFn, sz.
+    for n in ngbrs(best[1], sz) {
+      local sc is fitFn(n).
+      if sc > best[0] set best to list(sc, n).
+    }
     return best.
   }
 
@@ -129,8 +158,9 @@
         local i is dt:copy.
         local d is dt:copy.
         if i[j]:typename = "Scalar" {
-          set i[j] to i[j] + sz.
-          set d[j] to d[j] - sz.
+          // give up to 2.5% random around step size.
+          set i[j] to i[j] + sz + (random() - 0.5) / 20 * sz.
+          set d[j] to d[j] - sz + (random() - 0.5) / 20 * sz.
         }.
         rs:add(i).
         rs:add(d).
@@ -141,7 +171,7 @@
   }
 
   function hohmann {
-    parameter a, t_wrp is 40, stp is 5.
+    parameter a, t_wrp is 40, stp is 30.
 
     // decide if this is a decreasing transfer or increasing.
     // if decreasing: at apo decrease peri, then at peri decrease apo.
@@ -156,17 +186,18 @@
       return -abs(h - a).
     }).
     exec(true, t_wrp).
+    // now circularize
     circ(stp, t_wrp, is_dec).
 
   }
 
   function c_apo {
-    parameter stp is 5, t_wrp is 40.
+    parameter stp is 30, t_wrp is 40.
     circ(stp, t_wrp, false).
   }
 
   function c_per {
-    parameter stp is 5, t_wrp is 40.
+    parameter stp is 30, t_wrp is 40.
     circ(stp, t_wrp, true).
   }
 
@@ -184,6 +215,6 @@
   // This is "frozen" function to check if a parameter is frozen or not
   function fr { parameter v. return (v+""):indexof("fr") <> -1. }
   // Unfreeze to unlock the value
-  function unfr { parameter v. if fr(v) return v["fr"]. else return v. }
+  function unf { parameter v. if fr(v) return v["fr"]. else return v. }
   export(tf).
 }

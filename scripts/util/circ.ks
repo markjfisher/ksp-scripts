@@ -13,5 +13,5 @@ local f is {
   if at_peri tr:circ_per(stp, 30). else tr:circ_apo(stp, 30).
 }.
 
-parameter b, at_peri is true, stp is 5.
+parameter b, at_peri is true, stp is 30.
 f(b, at_peri, stp).

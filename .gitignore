@@ -7,3 +7,6 @@ dist
 *.ipr
 *.iws
 .idea
+
+#scripts/lib/*.ks
+#scripts/missions/*.ks
