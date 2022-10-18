@@ -11,7 +11,8 @@ local f1 is {
   local apoFactor is choose 0 if newApo = ship:orbit:apoapsis else 1/1500.
 
   tr:seek(
-    freeze(time:seconds + atT),
+    // use UT for time, so we can pass in things like addons:astrogator:timeOfShipAN, etc. without having to adjust for now time.
+    freeze(atT),
     0, // radial - x
     0, // normal - y
     0, // progrd - z
@@ -34,5 +35,5 @@ local f1 is {
   }
 }.
 
-parameter inc is 0, ecc is 0, atT is eta:apoapsis, newPeri is ship:orbit:periapsis, newApo is ship:orbit:apoapsis, doIt is false.
+parameter inc is 0, ecc is 0, atT is eta:apoapsis + time:seconds, newPeri is ship:orbit:periapsis, newApo is ship:orbit:apoapsis, doIt is false.
 f1(inc, ecc, atT, newPeri, newApo, doIt).
