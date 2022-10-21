@@ -9,9 +9,10 @@ local m is mission({ parameter seq, ev, next.
     gear on.
     descent:suicide_burn(3000).
     if stage:number >= 2 {
-      lock throttle to 0. wait 0.5. stage. wait 2.
+      lock throttle to 0. wait 2. stage. wait 3.
     }
     descent:suicide_burn(50).
+    descent:seek_landing_area().
     descent:powered_landing().
     next().
   }).

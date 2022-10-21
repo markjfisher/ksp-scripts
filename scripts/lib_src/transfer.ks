@@ -1,6 +1,14 @@
 {
   local INF is 2^64.
-  local tf is lex("exec", exec@, "freeze", f@, "seek_SOI", seek_SOI@, "seek", seek@, "hohmann", hohmann@, "circ_apo", c_apo@, "circ_per", c_per@).
+  local tf is lex(
+    "exec", exec@,
+    "freeze", f@,
+    "seek_SOI", seek_SOI@,
+    "seek", seek@,
+    "hohmann", hohmann@,
+    "circ_apo", c_apo@,
+    "circ_per", c_per@
+  ).
   local dvlib is improot("lib/deltav").
 
   function exec { parameter wrp is 0, t_wrp is 30. until not hasnode {e(wrp, t_wrp).}}
@@ -10,7 +18,6 @@
 
     // check if it's worth doing this node at all
     if n:deltav:mag < 0.001 {
-      print "skipping node, as it has no magnitude".
       remove nextnode.
       wait 0.
       return.
@@ -21,13 +28,13 @@
     wait until time:seconds >= stT.
 
     // st = flag for started
+    // There is a small addition to time here of 0.005, just to ensure the final part of the burn happens with more thrust
     local st is 0. local t is 0. lock throttle to t.
     until vdot(n:deltav, v) < 0 or (st and t <= 0.006) {
       set st to 1. if maxthrust < 0.1 {
         stage. wait 0.1.
         if maxthrust < 0.1 { for part in ship:parts { for r in part:resources set r:enabled to true. } wait 0.1. }
       }
-      // add a small adjustment so we finish slightly quicker at the end rather than creeping down on 0 time
       set t to min(mnv_time(n:deltav:mag)[0] + 0.005, 1). wait 0.1.
     }
     lock throttle to 0.
