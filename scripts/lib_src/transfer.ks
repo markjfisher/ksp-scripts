@@ -9,12 +9,11 @@
     "circ_apo", c_apo@,
     "circ_per", c_per@
   ).
-  local dvlib is improot("lib/deltav").
 
   function exec { parameter wrp is 0, t_wrp is 30. until not hasnode {e(wrp, t_wrp).}}
 
   function e {
-    parameter wrp is 0, t_wrp is 30, n is nextnode, v is n:deltav, stT is time:seconds + n:eta - mnv_time(v:mag)[0].
+    parameter wrp is 0, t_wrp is 30, n is nextnode, v is n:deltav, stT is time:seconds + n:eta - addons:ke:nodeHalfBurnTime.
 
     // check if it's worth doing this node at all
     if n:deltav:mag < 0.001 {
@@ -35,7 +34,7 @@
         stage. wait 0.1.
         if maxthrust < 0.1 { for part in ship:parts { for r in part:resources set r:enabled to true. } wait 0.1. }
       }
-      set t to min(mnv_time(n:deltav:mag)[0] + 0.005, 1). wait 0.1.
+      set t to min(addons:ke:nodeHalfBurnTime + 0.005, 1). wait 0.1.
     }
     lock throttle to 0.
     unlock steering.
@@ -57,9 +56,30 @@
     fit(d). wait 0. return d.
   }
 
-
   function seek_SOI {
-    parameter tBody, tPeri, t is time:seconds + 400, p is 200, stp is 30, bms is list(), xFit is noFit@.
+    parameter b, per, t, p, stp is 30, bms is list(), xFit is noFit@.
+
+    local needs_soi is 1.
+    local att is 0.
+
+    until (not needs_soi) or (att > 5)  {
+      SOI_loop(b, per, t, p, stp, bms, xFit).
+
+      local an is allnodes.
+      if not hasnode or not (an[an:length - 1]:orbit:hasnextpatch and an[an:length - 1]:orbit:nextpatch:body = b) {
+        set att to att + 1.
+        print "Attempt " + att + "; failed to get SOI to: " + b.
+        // move around orbit and reloop, SOI_loop deletes nodes
+        warpto(time:seconds + orbit:period - 10).
+        set t to t + orbit:period.
+      } else set needs_soi to 0.
+    }
+    // also acts as return flag
+    return not needs_soi.
+  }
+
+  function SOI_loop {
+    parameter tBody, tPeri, t, p, stp, bms, xFit.
     until not hasnode { remove nextnode. wait 0. }
     local u is 0.
     for bm in bms {
@@ -110,10 +130,6 @@
 
   function slopeAt { parameter b, t. return (sepAt(b, t + 1) - sepAt(b, t - 1)) / 2. }
   function sepAt { parameter b, t. return (positionat(ship, t) - positionat(b, t)):mag. }
-
-  function mnv_time {
-    parameter dV. return dvlib:burn(dV).
-  }
 
   function orbFit {
     parameter fitFn.

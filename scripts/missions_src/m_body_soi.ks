@@ -21,7 +21,7 @@ local m is mission({ parameter seq, ev, next.
   seq:add({
     parameter b, a, pro.
     local bms is addons:astrogator:calculateBurns(b).
-    tr:seek_SOI(b, a, 0, 0, 10, bms, {
+    local r is tr:seek_SOI(b, a, 0, 0, 10, bms, {
       parameter mnv.
       if not (mnv:orbit:hasnextpatch and mnv:orbit:nextpatch:body = b) return -INF.
       // prograde: get an inclination under 90
@@ -34,11 +34,12 @@ local m is mission({ parameter seq, ev, next.
       }
     }).
 
-    local an is allnodes.
-    if not hasnode or not (an[an:length - 1]:orbit:hasnextpatch and an[an:length - 1]:orbit:nextpatch:body = b) {
-      print "Failed to get SOI to: " + b.
+    // safety check
+    if not r {
+      print "Failed to get transition to target " + b.
       print 1/0.
     }
+
 
     tr:exec(true, 40).
     next().

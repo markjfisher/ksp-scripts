@@ -1,13 +1,12 @@
 {
   local INF is 2^64.
   local tf is lex("exec", exec@, "freeze", f@, "seek_SOI", seek_SOI@, "seek", seek@, "hohmann", hohmann@, "circ_apo", c_apo@, "circ_per", c_per@).
-  local dvlib is improot("lib/deltav").
   local dbg is import("lib/ds").
 
   function exec { parameter wrp is 0, t_wrp is 30. until not hasnode {e(wrp, t_wrp).}}
 
   function e {
-    parameter wrp is 0, t_wrp is 30, n is nextnode, v is n:deltav, stT is time:seconds + n:eta - mnv_time(v:mag)[0].
+    parameter wrp is 0, t_wrp is 30, n is nextnode, v is n:deltav, stT is time:seconds + n:eta - addons:ke:nodeHalfBurnTime.
 
     // check if it's worth doing this node at all
     if n:deltav:mag < 0.001 {
@@ -29,7 +28,7 @@
         if maxthrust < 0.1 { for part in ship:parts { for r in part:resources set r:enabled to true. } wait 0.1. }
       }
       // add a small adjustment so we finish slightly quicker at the end rather than creeping down on 0 time
-      set t to min(mnv_time(n:deltav:mag)[0] + 0.005, 1). wait 0.1.
+      set t to min(addons:ke:nodeHalfBurnTime + 0.005, 1). wait 0.1.
     }
     lock throttle to 0.
     unlock steering.
@@ -104,10 +103,6 @@
 
   function slopeAt { parameter b, t. return (sepAt(b, t + 1) - sepAt(b, t - 1)) / 2. }
   function sepAt { parameter b, t. return (positionat(ship, t) - positionat(b, t)):mag. }
-
-  function mnv_time {
-    parameter dV. return dvlib:burn(dV).
-  }
 
   function orbFit {
     parameter fitFn.

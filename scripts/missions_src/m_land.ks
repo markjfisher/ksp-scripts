@@ -12,7 +12,7 @@ local m is mission({ parameter seq, ev, next.
       lock throttle to 0. wait 2. stage. wait 3.
     }
     descent:suicide_burn(50).
-    descent:seek_landing_area().
+    // descent:seek_landing_area().
     descent:powered_landing().
     next().
   }).
