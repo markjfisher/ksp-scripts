@@ -6,7 +6,7 @@
   function exec { parameter wrp is 0, t_wrp is 30. until not hasnode {e(wrp, t_wrp).}}
 
   function e {
-    parameter wrp is 0, t_wrp is 30, n is nextnode, v is n:deltav, stT is time:seconds + n:eta - addons:ke:nodeHalfBurnTime.
+    parameter wrp is 0, t_wrp is 30, n is nextnode, v1 is n:deltav, stT is time:seconds + n:eta - addons:ke:nodeHalfBurnTime.
 
     // check if it's worth doing this node at all
     if n:deltav:mag < 0.001 {
@@ -22,7 +22,7 @@
 
     // st = flag for started
     local st is 0. local t is 0. lock throttle to t.
-    until vdot(n:deltav, v) < 0 or (st and t <= 0.006) {
+    until vdot(n:deltav, v1) < 0 or (st and t <= 0.006) {
       set st to 1. if maxthrust < 0.1 {
         stage. wait 0.1.
         if maxthrust < 0.1 { for part in ship:parts { for r in part:resources set r:enabled to true. } wait 0.1. }
@@ -210,8 +210,8 @@
   // "freeze" - this wraps the value so it doesn't get changed when seeking
   function f { parameter n. return lex("fr", n). }
   // This is "frozen" function to check if a parameter is frozen or not
-  function fr { parameter v. return (v+""):indexof("fr") <> -1. }
+  function fr { parameter v1. return (v1+""):indexof("fr") <> -1. }
   // Unfreeze to unlock the value
-  function unf { parameter v. if fr(v) return v["fr"]. else return v. }
+  function unf { parameter v1. if fr(v1) return v1["fr"]. else return v1. }
   export(tf).
 }

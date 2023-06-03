@@ -11,9 +11,9 @@
     local t is 0. lock throttle to t.
     local has_impact_time is {
       local a is (g() * (1 - (availtwr() * max(cos(vang(up:vector, ship:facing:vector)), NIL)))).
-      local v is -verticalspeed.
+      local v1 is -verticalspeed.
       local d is radar() - cutoff.
-      return v^2 + 2*a*d > 0.
+      return v1^2 + 2*a*d > 0.
     }.
     lock steering to desc_v().
     until radar() < cutoff or ship:availablethrust < 0.1 {
@@ -53,8 +53,8 @@
 
   // unrotate a vector
   function ur {
-    parameter v. if v:typename <> "Vector" set v to v:vector.
-    return lookdirup(v, ship:facing:topvector).
+    parameter v1. if v1:typename <> "Vector" set v1 to v1:vector.
+    return lookdirup(v1, ship:facing:topvector).
   }
 
   function radar {

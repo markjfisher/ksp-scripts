@@ -13,7 +13,7 @@
   function exec { parameter wrp is 0, t_wrp is 30. until not hasnode {e(wrp, t_wrp). wait 0.}}
 
   function e {
-    parameter wrp is 0, t_wrp is 30, n is nextnode, v is n:deltav, stT is time:seconds + n:eta - addons:ke:nodeHalfBurnTime.
+    parameter wrp is 0, t_wrp is 30, n is nextnode, v1 is n:deltav, stT is time:seconds + n:eta - addons:ke:nodeHalfBurnTime.
 
     // check if it's worth doing this node at all
     if n:deltav:mag < 0.001 {
@@ -28,10 +28,10 @@
 
     // There is a small addition to time here of 0.005, just to ensure the final part of the burn happens with more thrust
     local t is 0. lock throttle to t.
-    until vdot(n:deltav, v) < 0 or (t > 0 and t <= 0.006) {
+    until vdot(n:deltav, v1) < 0 or (t > 0 and t <= 0.006) {
       if maxthrust < 0.1 {
         stage. wait 0.1.
-        if maxthrust < 0.1 { for p in ship:parts { for r in p:resources set r:enabled to true. } wait 0.1. }
+        if maxthrust < 0.1 { for p in ship:parts { for r1 in p:resources set r1:enabled to true. } wait 0.1. }
       }
       set t to min(addons:ke:nodeHalfBurnTime + 0.005, 1).
       wait 0.01.
@@ -46,7 +46,7 @@
   function noFit { parameter mnv. return 0. }
 
   function seek {
-    parameter t, r, n, p, stp is 30, bms is list(), fitFn is noFit@, d is list(t, r, n, p, bms), fit is orbFit(fitFn@).
+    parameter t, r1, n, p, stp is 30, bms is list(), fitFn is noFit@, d is list(t, r1, n, p, bms), fit is orbFit(fitFn@).
     // current step will be decreased until under some limit
     local cs is stp.
     until cs < 0.042 {
@@ -236,8 +236,8 @@
   // "freeze" - this wraps the value so it doesn't get changed when seeking
   function f { parameter n. return lex("fr", n). }
   // This is "frozen" function to check if a parameter is frozen or not
-  function fr { parameter v. return (v+""):indexof("fr") <> -1. }
+  function fr { parameter v1. return (v1+""):indexof("fr") <> -1. }
   // Unfreeze to unlock the value
-  function unf { parameter v. if fr(v) return v["fr"]. else return v. }
+  function unf { parameter v1. if fr(v1) return v1["fr"]. else return v1. }
   export(tf).
 }

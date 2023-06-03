@@ -21,7 +21,7 @@ local m is mission({ parameter seq, ev, next.
   seq:add({
     parameter b, a, pro.
     local bms is addons:astrogator:calculateBurns(b).
-    local r is tr:seek_SOI(b, a, 0, 0, 10, bms, {
+    local r1 is tr:seek_SOI(b, a, 0, 0, 10, bms, {
       parameter mnv.
       if not (mnv:orbit:hasnextpatch and mnv:orbit:nextpatch:body = b) return -INF.
       // prograde: get an inclination under 90
@@ -29,7 +29,7 @@ local m is mission({ parameter seq, ev, next.
       local i is abs(mnv:orbit:nextpatch:inclination).
       return choose 0 if ((i < 90) and pro) or ((i > 90) and (not pro)) else -INF.
     }).
-    if not r {
+    if not r1 {
       print "Failed to get transition to " + b.
       print 1/0.
     }

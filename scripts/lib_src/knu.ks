@@ -19,7 +19,7 @@
   }.
 
   global export is {
-    parameter v.
-    set d[s:pop()] to v.
+    parameter v1.
+    set d[s:pop()] to v1.
   }.
 }

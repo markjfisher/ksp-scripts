@@ -23,7 +23,7 @@ local m is mission({ parameter seq, ev, next.
   seq:add({
     parameter b, a.
     local bms is addons:astrogator:calculateBurns(b).
-    local r is tr:seek_SOI(b, a, 0, 0, 2, bms, {
+    local r1 is tr:seek_SOI(b, a, 0, 0, 2, bms, {
       parameter mnv.
       if not (mnv:orbit:hasnextpatch and mnv:orbit:nextpatch:body = b) return -INF.
       // ensure we're prograde wrt target.
@@ -31,7 +31,7 @@ local m is mission({ parameter seq, ev, next.
     }).
 
     // safety check
-    if not r {
+    if not r1 {
       print "Failed to get transition to target " + b.
       print 1/0.
     }
