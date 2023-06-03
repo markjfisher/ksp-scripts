@@ -11,40 +11,17 @@ local INF is 2^64.
 // a = target altitude (scalar for exact or list(lower, upper) for range, we will hohmann transfer to lower at end
 // pro = true means prograde orbit
 
-// This requires you to have following staging:
-// N   : Initial Engines
-// N-1 : Launch Stability Assists
-// N-2 : chutes
-// N-3 : lifter separator
-
-// AGs
-//  5 = Fairings
-//  6 = AIRBRAKES
-// 10 = Auto deploy stuff
-
 local m is mission({ parameter seq, ev, next.
-//  local lifterDropped is false.
-
-//  ev:add("lifter", {
-//    if (not lifterDropped) and altitude > 20000 {
-//      set lifterDropped to true.
-//      stage. // Deploy chutes
-//      wait 1.
-//      ag6.   // deploy airbrakes
-//      stage. // remove lifter.
-//      wait 1.
-//   }
-//  }).
-
   seq:add({
     parameter b, a, pro.
     if ship:status = "prelaunch" launch:exec(0, TGT_ALT / 1000, false, false). // don't circ with lifter, it will drop
     // force off lifter
-    print "staging before circ".
-    wait 2.
+    wait 1.
     stage.
     wait 2.
+    rcs on.
     tr:circ_apo(50, 120).
+    rcs off.
     next().
   }).
 
@@ -57,11 +34,7 @@ local m is mission({ parameter seq, ev, next.
       // prograde: get an inclination under 90
       // retrograde: get an inclination over 90.
       local i is abs(mnv:orbit:nextpatch:inclination).
-      if pro {
-        return choose 0 if i < 90 else -INF.
-      } else {
-        return choose 0 if i > 90 else -INF.
-      }
+      return choose 0 if ((i < 90) and pro) or ((i > 90) and (not pro)) else -INF.
     }).
 
     // safety check

@@ -10,7 +10,7 @@
     "circ_per", c_per@
   ).
 
-  function exec { parameter wrp is 0, t_wrp is 30. until not hasnode {e(wrp, t_wrp).}}
+  function exec { parameter wrp is 0, t_wrp is 30. until not hasnode {e(wrp, t_wrp). wait 0.}}
 
   function e {
     parameter wrp is 0, t_wrp is 30, n is nextnode, v is n:deltav, stT is time:seconds + n:eta - addons:ke:nodeHalfBurnTime.
@@ -26,15 +26,15 @@
     if wrp warpto(stT - t_wrp).
     wait until time:seconds >= stT.
 
-    // st = flag for started
     // There is a small addition to time here of 0.005, just to ensure the final part of the burn happens with more thrust
-    local st is 0. local t is 0. lock throttle to t.
-    until vdot(n:deltav, v) < 0 or (st and t <= 0.006) {
-      set st to 1. if maxthrust < 0.1 {
+    local t is 0. lock throttle to t.
+    until vdot(n:deltav, v) < 0 or (t > 0 and t <= 0.006) {
+      if maxthrust < 0.1 {
         stage. wait 0.1.
-        if maxthrust < 0.1 { for part in ship:parts { for r in part:resources set r:enabled to true. } wait 0.1. }
+        if maxthrust < 0.1 { for p in ship:parts { for r in p:resources set r:enabled to true. } wait 0.1. }
       }
-      set t to min(addons:ke:nodeHalfBurnTime + 0.005, 1). wait 0.1.
+      set t to min(addons:ke:nodeHalfBurnTime + 0.005, 1).
+      wait 0.01.
     }
     lock throttle to 0.
     unlock steering.

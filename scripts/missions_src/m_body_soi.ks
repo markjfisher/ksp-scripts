@@ -27,11 +27,7 @@ local m is mission({ parameter seq, ev, next.
       // prograde: get an inclination under 90
       // retrograde: get an inclination over 90.
       local i is abs(mnv:orbit:nextpatch:inclination).
-      if pro {
-        return choose 0 if i < 90 else -INF.
-      } else {
-        return choose 0 if i > 90 else -INF.
-      }
+      return choose 0 if ((i < 90) and pro) or ((i > 90) and (not pro)) else -INF.
     }).
 
     // safety check

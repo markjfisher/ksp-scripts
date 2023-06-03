@@ -35,5 +35,5 @@ local f1 is {
   }
 }.
 
-parameter inc is 0, ecc is 0, atT is eta:apoapsis + time:seconds, newPeri is ship:orbit:periapsis, newApo is ship:orbit:apoapsis, doIt is false.
+parameter inc is 0, ecc is 0, atT is addons:astrogator:timeOfShipAN, newPeri is ship:orbit:periapsis, newApo is ship:orbit:apoapsis, doIt is false.
 f1(inc, ecc, atT, newPeri, newApo, doIt).
