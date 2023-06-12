@@ -36,7 +36,6 @@ local m is mission({ parameter seq, ev, next.
       print 1/0.
     }
 
-
     tr:exec(true, 40).
     next().
   }).

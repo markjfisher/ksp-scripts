@@ -3,6 +3,8 @@
 // Press Q to quit.
 // May have to change keys depending on if they filter
 
+// NOT FULLY TESTED
+
 if not exists("1:/knu.ks") copypath("0:/lib/knu.ks", "1:/").
 runpath("1:/knu.ks").
 local descent is import("lib/descent").

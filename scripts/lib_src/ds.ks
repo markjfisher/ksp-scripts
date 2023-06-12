@@ -1,3 +1,14 @@
+// Debug over socket.
+// Useful for sending debug information to telnet client.
+
+// Usage: dbg:out(<string>).
+
+// {
+//   local dbg is import("lib/ds").
+//   function foo { parameter a. dbg:out("your output: " + a). }
+//   foo(1).
+// }
+
 {
   // debug over socket
   local ds is lex("out", d@).

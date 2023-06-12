@@ -47,17 +47,24 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
+    parameter a.
     if ship:altitude < RENT_BURNALT {
       ag10 off.
+      set warp to 0. set warping to false. wait 1.
       lock steering to retrograde. wait 5. lock throttle to 1.
+      // we could check the high atmosphere alt here to ensure we're not burning up
+      // otherwise the ship has trouble rotating to retro at the end in atmosphere.
       wait until ship:maxthrust < 1.
       lock throttle to 0.
 
+      // kick off any additional engines towards body
       local normalVec is vcrs(ship:velocity:orbit, -body:position).
       local radialVec is vcrs(normalVec, ship:velocity:orbit).
       lock steering to radialVec.
       wait 5.
 
+      // This assumes the final stage also contains the parachutes set to safe values so they don't get
+      // destroyed in upper atmosphere
       stage. wait 2.
 
       lock steering to srfretrograde.
@@ -67,13 +74,10 @@ local m is mission({ parameter seq, ev, next.
     } else wait 0.5.
   }).
 
+
   seq:add({
-    if (ship:status = "Landed" or ship:status = "Splashed") {
-      print "Kerbin return complete.".
-      next().
-    } else {
-      wait 0.5.
-    }
+    parameter a.
+    if (ship:status = "Landed" or ship:status = "Splashed") next(). else wait 0.5.
   }).
 
 }).

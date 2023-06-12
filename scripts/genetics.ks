@@ -1,3 +1,7 @@
+// Cheers Kevin genetics scripts.
+// Haven't used these, as they aren't as fast as hillclimbing algorithms,
+// but are interesting to read.
+
 {
   local genetics is lex("seek", seek@).
 

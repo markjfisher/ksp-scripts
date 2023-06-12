@@ -6,6 +6,9 @@ local TGT_ALT is 82000.
 local fr is tr:freeze.
 local INF is 2^64.
 
+// Mission to launch and achieve orbit around target body.
+// This uses KOSAstrogator to create initial target maneuvers then adds an additional node to achieve target Ap.
+
 // Parameters to blocks:
 // b = target body
 // a = target altitude (scalar for exact or list(lower, upper) for range, we will hohmann transfer to lower at end
@@ -20,8 +23,12 @@ local m is mission({ parameter seq, ev, next.
 
   seq:add({
     parameter b, a, pro.
+    // Create initial maneuvers
     local bms is addons:astrogator:calculateBurns(b).
+    // Fine tune to target altitude
     local r1 is tr:seek_SOI(b, a, 0, 0, 10, bms, {
+      // Custom function to seeker to check we are getting correct target pro/retro direction.
+      // By returning -INF, this discourages the seeking algorithm from accepting the current path.
       parameter mnv.
       if not (mnv:orbit:hasnextpatch and mnv:orbit:nextpatch:body = b) return -INF.
       // prograde: get an inclination under 90

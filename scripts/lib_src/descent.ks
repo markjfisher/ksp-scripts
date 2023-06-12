@@ -8,6 +8,7 @@
 
   function suicide_burn {
     parameter cutoff.
+    print "doing suicide burn (" + cutoff + ")".
     local t is 0. lock throttle to t.
     local has_impact_time is {
       local a is (g() * (1 - (availtwr() * max(cos(vang(up:vector, ship:facing:vector)), NIL)))).
@@ -16,11 +17,14 @@
       return v1^2 + 2*a*d > 0.
     }.
     lock steering to desc_v().
+    // allow some time to rotate
+    wait 5.
     until radar() < cutoff or ship:availablethrust < 0.1 {
       if has_impact_time() set t to 1.
       else set t to 0.
       wait 0.001.
     }
+    print "finished suicide burn".
   }
 
   function pow_land {
@@ -67,7 +71,7 @@
   function seek_land {
     local ALS is 7.2.   // acceptable landing slope
     local ADR is 0.75.  // acceptable drift
-    local DES_VEL is 4. // the velocity to shift ourselves over at
+    local DES_VEL is 5. // the velocity to shift ourselves over at
     // target vector
     local tv is ur(up).
     local t is 1.

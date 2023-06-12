@@ -1,3 +1,5 @@
+// This library is no longer used
+
 { local o is lex("norm", n@, "ang", a@, "circ_node", circ_node@, "cap_circ_node", cap_circ_node@).
   function n {
     parameter b. return vcrs(b:velocity:orbit:normalized, (b:body:position - b:position):normalized).

@@ -1,3 +1,4 @@
+// Handles all transferring between bodies. Adapted from Cheers Kevin original work.
 {
   local INF is 2^64.
   local tf is lex(

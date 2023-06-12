@@ -1,3 +1,5 @@
+// KNU's not unix! Adapted from Cheers Kevin excellent series.
+// Added in improot to allow scripts to be run over CommSat, i.e. from "Base"'s disk system, but requires LOS to relay.
 {
   local s is stack().
   local d is lex().

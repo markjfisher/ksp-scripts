@@ -9,6 +9,8 @@ local RENT_BURNALT is 100000.
 
 local m is mission({ parameter seq, ev, next.
   seq:add({
+    parameter a is 0.
+    print "m_test running, a is: " + a.
     next().
   }).
 }).

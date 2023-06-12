@@ -3,6 +3,18 @@ runpath("1:/knu.ks").
 local tr is import("lib/transfer").
 local fr is tr:freeze.
 
+// Circularise around body at periapsis point.
+// Assumes you are heading into SOI of target body, or already in eliptical orbit around it.
+// Rarely use this as the missions scripts usually put you in circ orbit, but this is useful for testing, or resetting after manual maneuveurs
+
+// usage from console:
+// runpath("0:/util/circ", Mun).
+
+// Parameters:
+//  b: Body, [REQUIRED] Target body you are heading towards already
+// at_peri: boolean, [OPTIONAL] if true, will use periapsis, else apoapsis. Warning! If you are not already in eliptical orbit, there will be no apoapsis. default true.
+// stp: number, [OPTIONAL] the initial step for the seeking algorithm. default 30
+
 local f is {
   parameter b, at_peri, stp.
   if orbit:eccentricity < 0.0001 return 0.

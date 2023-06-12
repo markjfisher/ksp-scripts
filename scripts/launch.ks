@@ -2,10 +2,24 @@
   // Launch ship from Kerbal and get circular orbit.
   //
   // Use this from the root volume with:
-  // improot("launch.ks")["exec"](inc, apo, [circ = true], [verbose = true], [inverted = false]).
+  // improot("launch.ks"):exec(inc, apo, [verbose = false], [circ = true], [inverted = false]).
   // so that no disk space is used.
 
-  // The ship must have 2 initial stages, 1 for the engines, 2nd for the clamps.
+  // In missions:
+  // local launch is improot("launch").
+  // local m is mission({ parameter seq, ev, next.
+  //   seq:add({
+  //      parameter b, a, pro.
+  //      if ship:status = "prelaunch" launch:exec(0, 82, false).
+  //      next().
+  //    }).
+  //    // etc.
+  // }).
+  // export(m).
+
+  // REQUIREMENTS
+  // The ship must have 2 initial stages (counting from last backwards), 1 for the engines, 2nd for the clamps.
+  // The engines will start, and 1s later clamps released to ensure an initial thrust available.
   // It does not auto-stage when fuel runs out, you need to add a sensor to the tank for that.
 
   // ACTION GROUPS
@@ -197,6 +211,7 @@
     local fairing is false.
     local partlist is 0.
     list parts in partlist.
+    if verbose { print "autoFairing triggered". }
     for part in partlist {
       if (part:NAME = "fairingSize1" or
           part:NAME = "fairingSize1p5" or
@@ -222,15 +237,15 @@
       }
     }
     if fairing {
-      ag5 on.
       if verbose { print " ". print "staging fairing.". }
+      ag5 on.
     }
     set fairingstaged to true.
   }
 
   function autoDeploy {
-    ag10 on.
     if verbose { print " ". print "Extending deployable equipment". }
+    ag10 on.
     set deployed to true.
   }
 

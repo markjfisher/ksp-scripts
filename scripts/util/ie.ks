@@ -3,6 +3,17 @@ runpath("1:/knu.ks").
 local tr is import("lib/transfer").
 local freeze is tr:freeze.
 
+// Set Inclination, Eccentricity, Apoapsis and Periapsis around current body.
+// Current values are assumed if not supplied, i.e. ship's current Ap and Pe are default, so you can just change Inc and Ecc.
+
+// This is useful to change inclination easily.
+// Precise times can be made for when to perform maneuveur by creating a dummy node where you want to execute it, then run as follows:
+
+// runpath("0:/util/ie", 15, 0.00001, nextnode:time)
+
+// Final parameter of true will perform the maneuveur, but the node can be manually executed with 'util/xn', so
+// you can judge if this maneuveur is too expensive before performing it.
+
 local f1 is {
   parameter inc, ecc, atT, newPeri, newApo, doIt.
   local incFactor is choose 0 if inc = ship:orbit:inclination else 1000.

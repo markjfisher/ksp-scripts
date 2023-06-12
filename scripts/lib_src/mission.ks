@@ -1,3 +1,4 @@
+// Runs mission scripts, see missions_src for examples.
 {
   local f is "1:/runmode".
   export({

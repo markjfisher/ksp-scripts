@@ -1,12 +1,12 @@
-// this is to change the SATNAT probe by the given increment (negative to reduce).
+// this is to change the SATNAT probe inclination by the given delta (negative to reduce).
 
 local f is {
-  parameter inc.
-  set t to max(addons:astrogator:timeOfShipAN, addons:astrogator:timeOfShipDN).
-  set i to round(orbit:inclination, 0) + inc.
-  runpath("0:/util/set_inc_ecc", i, 0, t - time:seconds).
-  runpath("0:/util/do_node", 20).
+  parameter i_d, t_wrp.
+  set t_x to max(addons:astrogator:timeOfShipAN, addons:astrogator:timeOfShipDN).
+  set i_x to round(orbit:inclination, 0) + i_d.
+  runpath("0:/util/ie", i_x, 0.00000001, t_x - time:seconds).
+  runpath("0:/util/xn", t_wrp).
 }.
 
-parameter inclination_increment.
-f(inclination_increment).
+parameter inclination_delta, t_wrp is 20.
+f(inclination_delta, t_wrp).

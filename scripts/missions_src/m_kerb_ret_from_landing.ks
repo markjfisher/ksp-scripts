@@ -23,12 +23,14 @@ local m is mission({ parameter seq, ev, next.
     wait until apoapsis > a.
     lock throttle to 0.
     gear off.
+    ag1 off.
 
     // circularize at apo as we just took off
     tr:circ_apo(50, 20).
 
-    // run transfer to Kerbin - generic height, we will adjust to true target later
+    // run transfer to Kerbin - generic height
     local bms is addons:astrogator:calculateBurns(Kerbin).
+    // adjust to true target
     tr:seek_SOI(Kerbin, TGT_RETALT, bms[0]:atTime, 0, 2, bms).
     tr:exec(true, 20).
     next().
@@ -36,9 +38,9 @@ local m is mission({ parameter seq, ev, next.
 
   seq:add({
     parameter a.
-    local transition_time is time:seconds + eta:transition.
-    warpto(transition_time).
-    wait until time:seconds >= transition_time.
+    local tr_time is time:seconds + eta:transition.
+    warpto(tr_time).
+    wait until time:seconds >= tr_time.
     next().
   }).
 
@@ -68,15 +70,21 @@ local m is mission({ parameter seq, ev, next.
     parameter a.
     if ship:altitude < RENT_BURNALT {
       ag10 off.
+      set warp to 0. set warping to false. wait 1.
       lock steering to retrograde. wait 5. lock throttle to 1.
+      // we could check the high atmosphere alt here to ensure we're not burning up
+      // otherwise the ship has trouble rotating to retro at the end in atmosphere.
       wait until ship:maxthrust < 1.
       lock throttle to 0.
 
+      // kick off any additional engines towards body
       local normalVec is vcrs(ship:velocity:orbit, -body:position).
       local radialVec is vcrs(normalVec, ship:velocity:orbit).
       lock steering to radialVec.
       wait 5.
 
+      // This assumes the final stage also contains the parachutes set to safe values so they don't get
+      // destroyed in upper atmosphere
       stage. wait 2.
 
       lock steering to srfretrograde.

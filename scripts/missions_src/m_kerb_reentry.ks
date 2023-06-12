@@ -3,6 +3,10 @@ local mission is import("lib/mission").
 
 // A mission to descend from kerbin orbit to land.
 // Assumes you have enough DV to reduce orbit into atmosphere.
+
+// Action Groups:
+//  10 - Auto Deploy items from Launch script (e.g. solar panels)
+
 local m is mission({ parameter seq, ev, next.
   seq:add({
     ag10 off.
