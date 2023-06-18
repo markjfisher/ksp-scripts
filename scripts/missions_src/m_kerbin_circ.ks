@@ -15,7 +15,7 @@ local m is mission({ parameter seq, ev, next.
   }).
 
   seq:add({
-    parameter a.
+    parameter a, dH.
     print "kerbin orbit established.".
     next().
   }).
