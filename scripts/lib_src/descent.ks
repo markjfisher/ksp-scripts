@@ -30,23 +30,25 @@
   function pow_land {
     local t is 0. lock throttle to t.
     lock steering to desc_v().
-    until alt:radar < 15 { set t to hover(-7). wait 0. }
-    until velocity:surface:mag < 0.5 { set t to hover(0). wait 0. }
-    until ship:status = "Landed" { set t to hover(-2). wait 0. }
+    until alt:radar < 25 { set t to hover(-7). wait 0. }
+    until velocity:surface:mag < 0.2 { set t to hover(0). wait 0. }
+    until ship:status = "Landed" { set t to hover(-1.5). wait 0. }
     set t to 0.
   }
 
   local hPID is pidloop(2.7, 4.4, 0.12, 0, 1).
   function hover {
-    parameter sp. // setpoint
+    parameter sp. // setpoint, i.e. target that PID should try to achieve over time
     set hPID:setpoint to sp.
     set hPID:maxoutput to availtwr().
     return min(
       hPID:update(time:seconds, ship:verticalspeed) /
         max(cos(vang(up:vector, ship:facing:vector)), 0.0001) /
         max(availtwr(), 0.0001),
-        1
+      1
       ).
+    // print "hover: " + hR + ", availtwr: " + availtwr().
+    return hR.
   }
 
   // descent vector
@@ -70,8 +72,8 @@
 
   function seek_land {
     local ALS is 7.2.   // acceptable landing slope
-    local ADR is 0.75.  // acceptable drift
-    local DES_VEL is 5. // the velocity to shift ourselves over at
+    local ADR is 0.5.  // acceptable drift
+    local DES_VEL is 3. // the velocity to shift ourselves over at
     // target vector
     local tv is ur(up).
     local t is 1.

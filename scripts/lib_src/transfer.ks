@@ -211,23 +211,39 @@
     }).
     exec(true, t_wrp).
     // now circularize
-    circ(stp, t_wrp, is_dec).
+    circ(stp, t_wrp, is_dec, false).
 
   }
 
   function c_apo {
-    parameter stp is 30, t_wrp is 40.
-    circ(stp, t_wrp, false).
+    parameter stp is 30, t_wrp is 40, isLaunch is false.
+    circ(stp, t_wrp, false, isLaunch).
   }
 
   function c_per {
     parameter stp is 30, t_wrp is 40.
-    circ(stp, t_wrp, true).
+    circ(stp, t_wrp, true, false).
   }
 
   function circ {
-    parameter stp, t_wrp, at_peri.
-    seek(f(choose (time:seconds + eta:periapsis) if at_peri else (time:seconds + eta:apoapsis)), f(0), f(0), 0, stp, list(), {
+    parameter stp, t_wrp, at_peri, isLaunch is false.
+    // This assumes you have enough time to perform the full burn, and may lead to a node in the past if the seek takes too long and the ap/pe is close.
+    // difficult to wait until another orbit as you may not have one, e.g. launching.
+    // If this happens, the ship needs more initial thrust to give it time before reaching its peak to calculate the mnv.
+
+    local iP is 0.
+    // isLaunch allows us to calculate an initial prograde value by subracting the current horizontal speed from the perfect speed at the chosen ap
+    // it's all prograde at apoapsis, so subtracting the current horizontal speed will give a good estimate (I think) for dv start from.
+    if isLaunch {
+      local h is body:radius + apoapsis.
+      local sAtAp is addons:astrogator:speedAtApoapsis(body, h, h).
+      print "speedAtApoapsis: " + sAtAp.
+      print "horiz speed: " + ship:groundSpeed.
+      // until i work out why there's a difference in theoretical vs groundspeed, just knock 200 off. maybe the bodies rotational speed is diff
+      set iP to sAtAp - ship:groundSpeed - 200.
+      print "initial pro for launch: " + iP.
+    }
+    seek(f(choose (time:seconds + eta:periapsis) if at_peri else (time:seconds + eta:apoapsis)), f(0), f(0), iP, stp, list(), {
       parameter mnv.
       return -mnv:orbit:eccentricity.
     }).

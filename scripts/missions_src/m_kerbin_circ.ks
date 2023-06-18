@@ -5,11 +5,12 @@ local launch is improot("launch").
 
 // Parameter:
 //  a = altitude in metres for orbit (e.g. 82000)
+//  heading = 90 for E, 0 for N, etc.
 
 local m is mission({ parameter seq, ev, next.
   seq:add({
-    parameter a.
-    if ship:status = "prelaunch" launch:exec(0, a / 1000, false).
+    parameter a, dH.
+    if ship:status = "prelaunch" launch:exec(0, a / 1000, dH).
     next().
   }).
 

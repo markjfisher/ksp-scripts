@@ -10,7 +10,7 @@
   // local m is mission({ parameter seq, ev, next.
   //   seq:add({
   //      parameter b, a, pro.
-  //      if ship:status = "prelaunch" launch:exec(0, 82, false).
+  //      if ship:status = "prelaunch" launch:exec(0, 82).
   //      next().
   //    }).
   //    // etc.
@@ -26,7 +26,7 @@
   // AG5  Fairings
   // AG10 Autodeploy for anything custom (done at deployAlt height)
 
-  local l_version is "v1.0.3".
+  local l_version is "v1.0.4".
 
   local tr is improot("lib/transfer").
 
@@ -62,17 +62,20 @@
   local shouldCirc is true.
   local verbose is true.
   local flightAt is false.
+  local desiredHeading is 0.
 
   function exec {
       parameter inc,
       apo,
-      logging is true,
+      pHeading is 90,
+      logging is false,
       circ is true,
       inverted is false. // pass in true to invert flight which just rotates the ship so that East is UP on navball
 
     print "launch: " + l_version.
     set desiredInclination to inc.
     set desiredApoapsis to apo.
+    set desiredHeading to pHeading.
     set shouldCirc to circ.
     set verbose to logging.
     set flightAt to inverted.
@@ -148,7 +151,7 @@
   }
 
   function myHeading {
-    set roughHeading to 90 - desiredInclination.
+    set roughHeading to desiredHeading - desiredInclination.
     if (roughHeading < 0) { set roughHeading to 360 + roughHeading. }
     set triAng to abs(90 - roughHeading).
 
@@ -293,7 +296,7 @@
   }
 
   function circularize {
-    tr:circ_apo(50, 60).
+    tr:circ_apo(10, 80, true).
     lock throttle to 0.
     lockToPrograde().
   }

@@ -14,7 +14,7 @@ local INF is 2^64.
 local m is mission({ parameter seq, ev, next.
   seq:add({
     parameter b, a, pro.
-    if ship:status = "prelaunch" launch:exec(0, TGT_ALT / 1000, false).
+    if ship:status = "prelaunch" launch:exec(0, TGT_ALT / 1000).
     next().
   }).
 
