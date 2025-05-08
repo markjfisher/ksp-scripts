@@ -25,7 +25,8 @@ local f is {
   lock steering to lookdirup(u * g + delta_velocity, ship:facing:topvector).
 
   lock maxtwr to ship:maxthrust / (g * ship:mass).
-  lock throttle to min(target_twr / maxtwr, 1).
+  lock t to min(target_twr / maxtwr, 1).
+  lock throttle to t.
 
   set ship:control:pilotmainthrottle to 0.
 
@@ -55,8 +56,8 @@ local f is {
     set ch to "".
   }
 
+  set t to 0. wait 0.
   unlock throttle.
-  set throttle to 0.
   unlock steering.
   descent:powered_landing().
 }.
